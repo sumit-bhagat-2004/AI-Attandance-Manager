@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PWA Icons</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        .icon { 
+            background: linear-gradient(135deg, #06b6d4, #8b5cf6, #ec4899);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 20%;
+        }
+    </style>
+</head>
+<body>
+    <h2>PWA Icon Generator</h2>
+    <p>Right-click each icon and "Save image as..." to download:</p>
+    
+    <h3>16x16 (Favicon)</h3>
+    <canvas id="icon16" class="icon" width="16" height="16"></canvas>
+    
+    <h3>32x32 (Favicon)</h3>
+    <canvas id="icon32" class="icon" width="32" height="32"></canvas>
+    
+    <h3>180x180 (Apple Touch Icon)</h3>
+    <canvas id="icon180" class="icon" width="180" height="180"></canvas>
+    
+    <h3>192x192 (Android Icon)</h3>
+    <canvas id="icon192" class="icon" width="192" height="192"></canvas>
+    
+    <h3>512x512 (Android Splash)</h3>
+    <canvas id="icon512" class="icon" width="512" height="512"></canvas>
+
+    <script>
+        function drawIcon(canvasId, size) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+            
+            // Create gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#06b6d4');
+            gradient.addColorStop(0.5, '#8b5cf6');
+            gradient.addColorStop(1, '#ec4899');
+            
+            // Fill background
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Add rounded corners
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, size * 0.2);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // Add text
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${size * 0.3}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('EA', size/2, size/2);
+        }
+        
+        // Generate all icons
+        drawIcon('icon16', 16);
+        drawIcon('icon32', 32);
+        drawIcon('icon180', 180);
+        drawIcon('icon192', 192);
+        drawIcon('icon512', 512);
+    </script>
+</body>
+</html>
