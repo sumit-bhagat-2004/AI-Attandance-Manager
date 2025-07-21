@@ -1,21 +1,34 @@
-const CACHE_NAME = 'edutrack-ai-v1.0.2';
+const CACHE_NAME = 'edutrack-ai-v1.0.4';
 const urlsToCache = [
   '/',
   '/manifest.json',
   '/offline.html',
+  // Icons - all sizes
   '/icons/icon-16x16.png',
   '/icons/icon-32x32.png',
   '/icons/icon-72x72.png',
   '/icons/icon-96x96.png',
+  '/icons/icon-128x128.png',
   '/icons/icon-144x144.png',
   '/icons/icon-152x152.png',
   '/icons/icon-180x180.png',
   '/icons/icon-192x192.png',
   '/icons/icon-384x384.png',
   '/icons/icon-512x512.png',
+  '/icons/icon-192x192.svg',
+  '/icons/icon-512x512.svg',
   // Core pages
   '/sign-in',
-  '/sign-up'
+  '/sign-up',
+  '/user-manual',
+  '/quick-reference',
+  '/unauthorized',
+  // Critical CSS
+  '/_next/static/css/app.css',
+  // Core JavaScript chunks (these will be dynamically cached)
+  '/_next/static/chunks/main.js',
+  '/_next/static/chunks/webpack.js',
+  '/_next/static/chunks/framework.js'
 ];
 
 // Install event - cache resources
@@ -70,7 +83,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Return cached version or fetch from network
+        // Return cached version if available
         if (response) {
           console.log('Serving from cache:', event.request.url);
           return response;
@@ -88,22 +101,65 @@ self.addEventListener('fetch', (event) => {
           // Important: Clone the response because it's a stream
           const responseToCache = response.clone();
 
-          // Don't cache API responses except for static data
-          if (!event.request.url.includes('/api/') || 
-              event.request.url.includes('/api/auth') ||
-              event.request.url.includes('/api/data')) {
+          // Cache strategy based on request type
+          const url = event.request.url;
+          const shouldCache = 
+            // Cache all static assets
+            url.includes('/_next/static/') ||
+            // Cache page routes
+            url.match(/\/(user-manual|quick-reference|unauthorized)$/) ||
+            // Cache CSS files
+            url.endsWith('.css') ||
+            // Cache font files
+            url.match(/\.(woff|woff2|eot|ttf|otf)$/) ||
+            // Cache images
+            url.match(/\.(png|jpg|jpeg|gif|svg|ico|webp)$/) ||
+            // Don't cache API responses except for critical ones
+            (!url.includes('/api/') || 
+             url.includes('/api/auth') ||
+             url.includes('/api/data'));
+
+          if (shouldCache) {
             caches.open(CACHE_NAME)
               .then((cache) => {
                 cache.put(event.request, responseToCache);
+              })
+              .catch((error) => {
+                console.log('Failed to cache:', url, error);
               });
           }
 
           return response;
-        }).catch(() => {
-          // Return offline page for navigation requests
+        }).catch((error) => {
+          console.log('Fetch failed for:', event.request.url, error);
+          
+          // Offline fallback strategies
           if (event.request.mode === 'navigate') {
+            // Return offline page for navigation requests
+            return caches.match('/offline.html');
+          } else if (event.request.destination === 'image') {
+            // Return a default icon for images
+            return caches.match('/icons/icon-192x192.png');
+          } else if (event.request.url.endsWith('.txt')) {
+            // Return cached text files or offline message
+            return new Response('This content is not available offline.', {
+              status: 200,
+              statusText: 'OK',
+              headers: {
+                'Content-Type': 'text/plain'
+              }
+            });
+          } else if (event.request.url.includes('/user-manual') || 
+                     event.request.url.includes('/quick-reference')) {
+            // Return offline page for documentation
             return caches.match('/offline.html');
           }
+          
+          // Default fallback
+          return new Response('Network error occurred', {
+            status: 408,
+            statusText: 'Request Timeout'
+          });
         });
       })
   );
