@@ -1,0 +1,337 @@
+================================================================================
+                          EDUTRACK AI - QUICK REFERENCE
+                         Essential Shortcuts and Actions
+================================================================================
+
+Version: 1.0.0
+Last Updated: July 21, 2025
+
+================================================================================
+QUICK ACCESS SHORTCUTS
+================================================================================
+
+NAVIGATION SHORTCUTS
+--------------------
+• Schedule View       → Click "Schedule" in navigation bar
+• Statistics View     → Click "Stats" in navigation bar  
+• Makeup View        → Click "Makeup" in navigation bar
+• Calendar View      → Click "Calendar" in navigation bar
+• Mobile Menu        → Tap hamburger menu (☰) on mobile
+• Back to Today      → Click "Today" in Time Machine controls
+
+ATTENDANCE ACTIONS
+------------------
+• Mark Present       → Click class card → Green checkmark (✓)
+• Mark Absent        → Click class card → Red X mark (✗)
+• Mark All Present   → Click "Mark All Present" button
+• Mark All Absent    → Click "Mark All Absent" button
+• Undo Last Action   → Click class card again to change status
+• View Class Details → Hover over class card
+
+QUICK ACTIONS
+-------------
+• Add ECA Activity   → Click "Add ECA" button
+• Generate Reports   → Click "AI-Enhanced Weekly Reports" button
+• Schedule Makeup    → Makeup section → Click notification
+• Open Help         → Footer → "Help Center"
+• User Manual       → Footer → "User Manual"
+• Quick Reference   → Footer → "Quick Reference"
+
+================================================================================
+COLOR CODING REFERENCE
+================================================================================
+
+ATTENDANCE STATUS
+-----------------
+🟢 GREEN    → Present (Good)
+🔴 RED      → Absent (Needs Attention)
+⚪ GRAY     → Not Marked (Requires Input)
+🟡 YELLOW   → Warning (Near Threshold)
+
+SUBJECT TYPES
+-------------
+📚 Blue     → Theory Classes
+🧪 Green    → Laboratory Sessions  
+🏋️ Purple   → Training Sessions
+🎯 Orange   → Special Events/ECAs
+
+PRIORITY LEVELS
+---------------
+🔴 RED      → Critical (< 75% attendance)
+🟡 YELLOW   → Warning (75-80% attendance)
+🟢 GREEN    → Good (> 80% attendance)
+
+================================================================================
+ESSENTIAL WORKFLOWS
+================================================================================
+
+DAILY ATTENDANCE WORKFLOW
+-------------------------
+1. Open EduTrack AI dashboard
+2. Review today's class schedule
+3. Click "Mark All Present" if attending all classes
+   OR mark individual classes as Present/Absent
+4. Check makeup alerts (right panel)
+5. Review daily statistics
+
+WEEKLY REVIEW WORKFLOW  
+----------------------
+1. Switch to Stats view
+2. Review weekly attendance percentages
+3. Click "AI-Enhanced Weekly Reports" button
+4. Read AI recommendations and insights
+5. Plan makeup classes if needed
+6. Update ECA activities
+
+MAKEUP CLASS WORKFLOW
+--------------------
+1. Check Makeup section (right panel) for alerts
+2. Click on subject requiring makeup
+3. Select from available makeup time slots
+4. Confirm makeup class booking
+5. Mark attendance when you attend makeup
+
+ECA MANAGEMENT WORKFLOW
+----------------------
+1. Click "Add ECA" button
+2. Fill in activity details:
+   - Activity name and description
+   - Date and time
+   - Category and achievement level
+3. Save activity
+4. View ECA history in Calendar view
+
+================================================================================
+KEYBOARD & MOUSE SHORTCUTS
+================================================================================
+
+MOUSE ACTIONS
+-------------
+• Single Click       → Select/Mark attendance
+• Double Click       → Quick mark present
+• Right Click        → Context menu (when available)
+• Hover              → Show additional details
+• Drag               → Navigate calendar dates
+
+BROWSER SHORTCUTS
+-----------------
+• F5 or Ctrl+R       → Refresh page
+• Ctrl+Shift+R       → Hard refresh (clear cache)
+• F11                → Full screen mode
+• Ctrl + (+/-)       → Zoom in/out
+• Ctrl+0             → Reset zoom
+
+MOBILE GESTURES
+---------------
+• Tap                → Select/Mark
+• Long Press         → Additional options
+• Swipe Left/Right   → Navigate dates
+• Pinch              → Zoom charts
+• Pull Down          → Refresh content
+
+================================================================================
+COMMON TASKS & SOLUTIONS
+================================================================================
+
+MARKING ATTENDANCE
+------------------
+Task: Mark today's attendance quickly
+Steps:
+1. Look at schedule on main dashboard
+2. If attending all classes: Click "Mark All Present"
+3. If missing some classes: Click individual red X for absent classes
+4. Verify all classes are marked (no gray cards)
+
+Task: Correct attendance mistake
+Steps:
+1. Find the incorrectly marked class
+2. Click on the class card
+3. Select correct status (Present/Absent)
+4. Change is saved automatically
+
+CHECKING PERFORMANCE
+--------------------
+Task: View attendance statistics
+Steps:
+1. Stats are always visible in right panel (Schedule view)
+2. For detailed stats: Click "Stats" in navigation
+3. For trends: Switch to Calendar view
+4. For AI analysis: Generate weekly reports
+
+SCHEDULING MAKEUP CLASSES
+-------------------------
+Task: Schedule required makeup
+Steps:
+1. Check Makeup section (right panel) for red alerts
+2. Click on subject with low attendance
+3. Browse available makeup slots
+4. Select preferred time
+5. Click "Schedule Makeup" to confirm
+
+GENERATING AI REPORTS
+--------------------
+Task: Get personalized study recommendations
+Steps:
+1. Click large "AI-Enhanced Weekly Reports" button
+2. Wait for AI analysis (may take 1-2 minutes)
+3. Review generated report with recommendations
+4. Follow suggested study plans and strategies
+5. Save report for future reference
+
+================================================================================
+TROUBLESHOOTING QUICK FIXES
+================================================================================
+
+COMMON PROBLEMS
+---------------
+Problem: Page won't load
+Quick Fix: Press F5 to refresh, check internet connection
+
+Problem: Attendance not saving  
+Quick Fix: Click the class again, wait 2 seconds, refresh page
+
+Problem: Reports not generating
+Quick Fix: Check internet, wait 3 minutes, try again
+
+Problem: Mobile menu not opening
+Quick Fix: Tap hamburger icon again, refresh page
+
+Problem: Wrong date showing
+Quick Fix: Click "Today" in Time Machine controls
+
+Problem: Statistics not updating
+Quick Fix: Refresh page (F5), check if attendance is marked
+
+EMERGENCY ACTIONS
+-----------------
+Attendance Crisis (< 75%):
+1. ⚠️ Check Makeup alerts immediately
+2. 📅 Schedule all available makeup classes  
+3. 🤖 Generate AI report for recovery plan
+4. 📞 Contact academic advisor
+
+System Not Working:
+1. 🔄 Refresh page (Ctrl+R)
+2. 🌐 Check internet connection
+3. 🧹 Clear browser cache
+4. 📱 Try different browser/device
+5. 📧 Contact support if issues persist
+
+================================================================================
+PERFORMANCE TIPS
+================================================================================
+
+SPEED UP THE APP
+----------------
+• Use Chrome, Firefox, Safari, or Edge browsers
+• Close unnecessary browser tabs
+• Clear browser cache weekly
+• Ensure stable internet connection
+• Keep browser updated
+
+OPTIMIZE DAILY USAGE
+--------------------
+• Mark attendance immediately after classes
+• Use bulk operations when possible
+• Check makeup alerts daily
+• Generate reports weekly, not daily
+• Keep ECA activities updated regularly
+
+MOBILE OPTIMIZATION
+-------------------
+• Use WiFi when possible for faster loading
+• Close other apps when using EduTrack AI
+• Enable JavaScript in mobile browser
+• Use latest browser version
+• Clear mobile browser cache regularly
+
+================================================================================
+FEATURE QUICK ACCESS
+================================================================================
+
+MOST USED FEATURES
+------------------
+📊 View Today's Schedule     → Main dashboard (default view)
+✅ Mark Attendance          → Click on class cards  
+📈 Check Statistics         → Right panel or Stats view
+🔔 Makeup Alerts           → Right panel notifications
+🤖 AI Reports              → Large button on dashboard
+📅 Calendar History        → Calendar view
+➕ Add ECA                 → "Add ECA" button
+
+ADVANCED FEATURES
+-----------------
+🔍 Search Reports          → Reports modal → Search box
+📤 Export Data            → Stats view → Export options  
+⚙️ Time Travel            → Date controls at top
+📱 Mobile Menu            → Hamburger icon (mobile)
+🎯 Goal Tracking          → Stats view → Goals section
+
+ADMIN FEATURES
+--------------
+📊 Bulk Operations        → "Mark All" buttons
+🗂️ Report Management     → Reports modal → Manage tab
+📋 Data Export           → Various export options
+🔄 Sync Status           → Connection indicator
+⚡ Performance Stats     → Help section
+
+================================================================================
+CONTACT & SUPPORT
+================================================================================
+
+QUICK HELP OPTIONS
+------------------
+🆘 In-App Help           → Footer → "Help Center"
+📖 User Manual          → Footer → "User Manual"  
+⚡ Quick Reference       → Footer → "Quick Reference" (this guide)
+📧 Email Support        → support@edutrack-ai.com
+🐛 Report Bug           → bugs@edutrack-ai.com
+💡 Feature Request      → feedback@edutrack-ai.com
+
+EMERGENCY CONTACT
+-----------------
+For urgent academic issues:
+📞 Contact your academic advisor directly
+📧 Email: urgent@edutrack-ai.com (technical emergencies only)
+🏫 Contact your institution's student services
+
+COMMUNITY & UPDATES
+-------------------
+📱 Check app notifications for updates
+🌐 Visit website for announcements  
+📊 GitHub repository for technical details
+📝 Feedback form in app settings
+
+================================================================================
+VERSION HISTORY
+================================================================================
+
+Version 1.0.0 (July 2025)
+- Initial release
+- Core attendance tracking
+- AI-powered reports
+- ECA management
+- Mobile responsive design
+- Comprehensive analytics
+
+Upcoming Features
+- Offline mode
+- Push notifications  
+- Advanced analytics
+- Integration with LMS
+- Parent/guardian portal
+
+================================================================================
+
+🎯 PRO TIP: Bookmark this reference guide for quick access to shortcuts and 
+solutions. The most efficient users mark attendance daily, generate weekly 
+reports, and schedule makeup classes promptly.
+
+📚 REMEMBER: Green = Good, Red = Needs Attention, Gray = Needs Input
+
+⚡ SPEED TIP: Use "Mark All Present" on normal days, then individually mark 
+absences to save time.
+
+================================================================================
+End of Quick Reference Guide
+================================================================================

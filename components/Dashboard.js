@@ -26,6 +26,7 @@ import MakeupModal from './MakeupModal';
 import ECAManagerModal from './ECAManagerModal';
 import ReportManagerModal from './ReportManagerModal';
 import PWAInstallPrompt from './PWAInstallPrompt';
+import Footer from './Footer';
 import { cn, formatDate } from '../lib/utils';
 import { subjects, calculateTotalClassesHeld } from '../lib/scheduleData';
 import { DateControlPanel } from '../lib/dateUtils';
@@ -1338,6 +1339,9 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                     )}
                 </div>
             </div>
+
+            {/* Footer */}
+            <Footer />
 
             {/* AI Result Modal */}
             <AnimatePresence>

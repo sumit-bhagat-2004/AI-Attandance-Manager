@@ -1,0 +1,581 @@
+================================================================================
+                           EDUTRACK AI - USER MANUAL
+                          Complete Guide to Academic Success
+================================================================================
+
+Effective Date: July 21, 2025
+Version: 1.0.0
+Platform: Web Application
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+1. INTRODUCTION
+2. GETTING STARTED
+   - Account Setup
+   - Dashboard Overview
+   - Navigation Guide
+3. CORE FEATURES
+   - Attendance Tracking
+   - Schedule Management
+   - Makeup Classes
+4. ADVANCED FEATURES
+   - AI-Enhanced Reports
+   - ECA Management
+   - Analytics & Statistics
+5. USER INTERFACE GUIDE
+   - Desktop Navigation
+   - Mobile Interface
+   - Time Machine Controls
+6. BEST PRACTICES
+7. TROUBLESHOOTING
+8. FREQUENTLY ASKED QUESTIONS
+9. SUPPORT & CONTACT
+
+================================================================================
+1. INTRODUCTION
+================================================================================
+
+Welcome to EduTrack AI, your intelligent companion for academic success. This 
+comprehensive attendance management system combines smart tracking with 
+AI-powered insights to help you excel in your studies.
+
+EduTrack AI provides:
+- Automated attendance tracking and analysis
+- Personalized AI-generated study recommendations
+- Makeup class scheduling and management
+- Extra-curricular activity (ECA) tracking
+- Comprehensive academic performance reports
+- Real-time statistics and insights
+
+================================================================================
+2. GETTING STARTED
+================================================================================
+
+ACCOUNT SETUP
+-------------
+1. Sign Up Process:
+   - Visit the EduTrack AI website
+   - Click "Sign Up" to create your account
+   - Use Clerk authentication (email or social login)
+   - Complete your profile with name and photo
+   - Your attendance database will be automatically initialized
+
+2. Initial Configuration:
+   - The system will create your personal attendance database
+   - Your schedule will be populated with standard subjects
+   - Default settings will be applied for optimal experience
+
+DASHBOARD OVERVIEW
+------------------
+Upon login, you'll see the main dashboard with these sections:
+
+Header Section:
+- EduTrack AI logo and branding
+- User welcome message with profile picture
+- Current date and time display
+- Navigation menu (desktop) or hamburger menu (mobile)
+
+Main Navigation Views:
+1. SCHEDULE VIEW (Default)
+   - Daily class schedule with attendance tracking
+   - Quick action buttons for marking attendance
+   - Subject-wise breakdown with visual indicators
+
+2. STATS VIEW
+   - Overall attendance percentage
+   - Subject-wise performance metrics
+   - Attendance trends and patterns
+   - Achievement badges and milestones
+
+3. MAKEUP VIEW
+   - List of required makeup classes
+   - Available makeup slots
+   - Scheduling interface for makeup sessions
+
+4. CALENDAR VIEW
+   - Monthly calendar with attendance history
+   - ECA activities display
+   - Visual attendance patterns
+
+Side Panel Features (Schedule View):
+- Real-time statistics summary
+- Makeup class alerts and notifications
+- Quick access to recent activities
+
+NAVIGATION GUIDE
+----------------
+Desktop Navigation:
+- Use the top navigation bar to switch between views
+- Click on any section to instantly switch views
+- Use the Time Machine controls to navigate dates
+- Access user profile and settings from the header
+
+Mobile Navigation:
+- Tap the hamburger menu (☰) to open mobile menu
+- All navigation options are available in the mobile menu
+- Swipe gestures supported for quick navigation
+- Touch-optimized interface for easy use
+
+================================================================================
+3. CORE FEATURES
+================================================================================
+
+ATTENDANCE TRACKING
+-------------------
+The heart of EduTrack AI is its intelligent attendance tracking system.
+
+Marking Attendance:
+1. Daily Attendance:
+   - View your daily class schedule on the main dashboard
+   - Each class appears as a card with subject details
+   - Click on any class to mark attendance status:
+     * GREEN = Present
+     * RED = Absent  
+     * GRAY = Not marked yet
+
+2. Bulk Operations:
+   - "Mark All Present" button for days with full attendance
+   - "Mark All Absent" button for sick days or holidays
+   - Individual correction by clicking specific classes
+
+3. Attendance History:
+   - Complete history available in Calendar view
+   - Visual indicators for each day's performance
+   - Monthly and weekly attendance patterns
+   - Exportable attendance reports
+
+Color Coding System:
+- Green: Present (good attendance)
+- Red: Absent (requires attention)
+- Gray: Unmarked (needs input)
+- Yellow: Warning (approaching attendance threshold)
+
+SCHEDULE MANAGEMENT
+-------------------
+Your academic schedule is automatically managed by the system.
+
+Daily Schedule Features:
+- All subjects displayed with time slots
+- Different icons for different class types:
+  * 📚 Theory classes
+  * 🧪 Laboratory sessions
+  * 🏋️ Training sessions
+  * 🎯 Special events
+
+Weekly Schedule:
+- Navigate between weeks using date controls
+- View entire semester schedule
+- Holiday and break periods marked
+- Exam schedules integrated
+
+Schedule Customization:
+- Add special events or extra classes
+- Mark holiday periods
+- Note schedule changes or updates
+- Sync with academic calendar
+
+MAKEUP CLASSES
+--------------
+The system automatically tracks missed classes and suggests makeup opportunities.
+
+Makeup Class Detection:
+- Automatic identification of missed classes
+- Calculation of required makeup hours
+- Priority ranking based on attendance percentage
+- Subject-wise makeup requirements
+
+Scheduling Makeup Classes:
+1. View makeup alerts in the Makeup section
+2. Click on any subject requiring makeup
+3. Select from available makeup slots
+4. Confirm your makeup class booking
+5. Track completed makeup sessions
+
+Makeup Class Types:
+- Regular makeup sessions
+- Extra tutorial sessions
+- Lab makeup sessions
+- Group study sessions
+- One-on-one consultations
+
+================================================================================
+4. ADVANCED FEATURES
+================================================================================
+
+AI-ENHANCED REPORTS
+-------------------
+EduTrack AI's most powerful feature is its AI-generated academic reports.
+
+Weekly Report Generation:
+1. Click the "AI-Enhanced Weekly Reports & Study Plans" button
+2. The system analyzes your attendance patterns
+3. AI generates personalized recommendations
+4. Comprehensive reports saved to your dashboard
+
+Report Contents Include:
+- Detailed attendance analysis for each subject
+- Personalized study recommendations
+- Attendance improvement strategies
+- Motivational content and goal setting
+- Resource recommendations
+- Weekly goals and targets
+- Recovery plans for missed classes
+
+AI Insights Features:
+- Subject-specific analysis
+- Performance predictions
+- Study time recommendations
+- Resource suggestions
+- Motivation techniques
+- Progress tracking methods
+
+Report Management:
+- View all generated reports
+- Export reports for sharing
+- Delete outdated reports
+- Search through report history
+
+ECA MANAGEMENT
+--------------
+Track and manage your Extra-Curricular Activities.
+
+Adding ECA Activities:
+1. Click the "Add ECA" button
+2. Fill in activity details:
+   - Activity name and description
+   - Date and duration
+   - Category (sports, cultural, academic, etc.)
+   - Achievement level
+3. Save the activity to your record
+
+ECA Tracking Benefits:
+- Comprehensive activity portfolio
+- Achievement documentation
+- Time management insights
+- College application support
+- Scholarship opportunity tracking
+
+ECA Categories:
+- Sports and athletics
+- Cultural activities
+- Academic competitions
+- Volunteer work
+- Leadership roles
+- Technical projects
+
+ANALYTICS & STATISTICS
+----------------------
+Comprehensive analytics to track your academic progress.
+
+Performance Metrics:
+- Overall attendance percentage
+- Subject-wise attendance rates
+- Weekly and monthly trends
+- Comparison with academic requirements
+- Achievement milestones
+
+Visual Analytics:
+- Charts and graphs for easy understanding
+- Trend analysis over time
+- Performance comparisons
+- Goal tracking progress
+- Achievement badges
+
+Reporting Features:
+- Export statistics for academic advisors
+- Share progress with parents/guardians
+- Create presentation-ready reports
+- Historical data analysis
+
+================================================================================
+5. USER INTERFACE GUIDE
+================================================================================
+
+DESKTOP INTERFACE
+-----------------
+The desktop interface is optimized for productivity and ease of use.
+
+Layout Components:
+1. Header Bar:
+   - Logo and branding
+   - User profile information
+   - Navigation menu
+   - Quick action buttons
+
+2. Main Content Area:
+   - Primary view content (Schedule, Stats, etc.)
+   - Interactive elements
+   - Real-time data updates
+
+3. Side Panel (Schedule View):
+   - Statistics summary
+   - Makeup alerts
+   - Quick actions
+
+4. Footer:
+   - Help and support links
+   - Legal information
+   - App status and version
+
+Navigation Features:
+- Tabbed navigation for main views
+- Hover effects for better user experience
+- Keyboard shortcuts support
+- Breadcrumb navigation
+
+MOBILE INTERFACE
+----------------
+Fully responsive design optimized for mobile devices.
+
+Mobile-Specific Features:
+- Hamburger menu for navigation
+- Touch-optimized buttons and controls
+- Swipe gestures for navigation
+- Responsive layout adaptation
+- Mobile-friendly forms and inputs
+
+Mobile Navigation:
+1. Tap hamburger menu to open navigation
+2. Select desired view from menu options
+3. Use touch gestures for interactions
+4. Profile and settings accessible from menu
+
+Touch Interactions:
+- Tap to select/mark attendance
+- Long press for additional options
+- Swipe for navigation between dates
+- Pinch to zoom on charts and graphs
+
+TIME MACHINE CONTROLS
+---------------------
+Navigate through different dates and time periods.
+
+Date Navigation:
+- Previous/Next day buttons
+- Week navigation controls
+- Month selection dropdown
+- Semester/year selection
+- Jump to today button
+
+Features:
+- View historical attendance data
+- Plan future schedules
+- Analyze past performance
+- Compare different time periods
+- Track long-term trends
+
+================================================================================
+6. BEST PRACTICES
+================================================================================
+
+DAILY USAGE RECOMMENDATIONS
+---------------------------
+For optimal results, follow these daily practices:
+
+Morning Routine:
+1. Check your daily schedule
+2. Plan your day around classes
+3. Note any special events or changes
+4. Set attendance goals for the day
+
+Throughout the Day:
+1. Mark attendance immediately after each class
+2. Use bulk operations when appropriate
+3. Check for makeup alerts
+4. Update any schedule changes
+
+Evening Review:
+1. Review the day's attendance
+2. Plan for any makeup requirements
+3. Check weekly progress
+4. Set goals for tomorrow
+
+WEEKLY PRACTICES
+----------------
+1. Generate AI reports every week
+2. Review attendance statistics
+3. Plan makeup classes for the following week
+4. Update ECA activities
+5. Share progress with advisors if needed
+
+MONTHLY PRACTICES
+-----------------
+1. Comprehensive performance review
+2. Long-term goal setting
+3. Archive completed reports
+4. Plan for upcoming academic events
+5. Export data for records
+
+SEMESTER PRACTICES
+------------------
+1. Complete academic performance analysis
+2. Plan for next semester
+3. Update academic goals
+4. Create comprehensive portfolio
+5. Prepare for academic reviews
+
+================================================================================
+7. TROUBLESHOOTING
+================================================================================
+
+COMMON ISSUES AND SOLUTIONS
+---------------------------
+
+Issue: Login Problems
+Solution:
+- Check internet connection
+- Clear browser cache and cookies
+- Try incognito/private browsing mode
+- Contact support if problem persists
+
+Issue: Attendance Not Saving
+Solution:
+- Refresh the page and try again
+- Check internet connectivity
+- Ensure you're clicking the save button
+- Try logging out and logging back in
+
+Issue: Reports Not Generating
+Solution:
+- Check that you have attendance data
+- Ensure stable internet connection
+- Wait a few minutes and try again
+- Clear browser cache
+
+Issue: Mobile App Not Loading
+Solution:
+- Check mobile data/WiFi connection
+- Update your mobile browser
+- Clear browser data
+- Try accessing from desktop
+
+Issue: Schedule Not Displaying
+Solution:
+- Refresh the page
+- Check if you're in the correct semester
+- Verify your academic schedule setup
+- Contact admin if schedule is incorrect
+
+PERFORMANCE OPTIMIZATION
+------------------------
+For best performance:
+1. Use modern browsers (Chrome, Firefox, Safari, Edge)
+2. Keep browser updated
+3. Clear cache regularly
+4. Close unnecessary browser tabs
+5. Ensure stable internet connection
+
+DATA BACKUP
+-----------
+Your data is automatically backed up, but you can also:
+1. Export attendance reports regularly
+2. Save important reports locally
+3. Document important achievements
+4. Keep academic records updated
+
+================================================================================
+8. FREQUENTLY ASKED QUESTIONS
+================================================================================
+
+Q: How accurate are the AI recommendations?
+A: The AI analyzes your attendance patterns, subject performance, and academic 
+trends to provide highly personalized recommendations. While the system is very 
+accurate, always consult with your academic advisors for important decisions.
+
+Q: Can I edit attendance after marking it?
+A: Yes, you can change attendance status by clicking on the class again and 
+selecting the correct status. The system maintains a history of changes.
+
+Q: How do makeup classes work?
+A: When you miss classes, the system automatically identifies makeup 
+requirements and suggests available opportunities. You can schedule and track 
+makeup classes through the Makeup section.
+
+Q: Can I export my data?
+A: Yes, you can export attendance reports and statistics through the Reports 
+section. This is useful for sharing with advisors or keeping personal records.
+
+Q: Is my data secure?
+A: Yes, all data is encrypted and stored securely using industry-standard 
+security practices. We follow strict privacy policies to protect your information.
+
+Q: Can I use this on multiple devices?
+A: Yes, EduTrack AI is a web application that works on any device with an 
+internet connection and modern web browser.
+
+Q: What if I make a mistake in marking attendance?
+A: You can easily correct mistakes by clicking on the class again and selecting 
+the correct status. Changes are saved automatically.
+
+Q: How often should I generate AI reports?
+A: We recommend generating reports weekly for best results. This provides timely 
+insights while giving the AI enough data to make meaningful recommendations.
+
+Q: Can I share my progress with parents or advisors?
+A: Yes, you can export reports and statistics to share with parents, advisors, 
+or anyone else who needs to track your academic progress.
+
+Q: What happens if I miss several days of classes?
+A: The system will automatically identify all missed classes and provide 
+comprehensive makeup recommendations. The AI will also generate recovery plans 
+to help you catch up.
+
+================================================================================
+9. SUPPORT & CONTACT
+================================================================================
+
+GETTING HELP
+------------
+If you need assistance:
+
+1. In-App Help:
+   - Click "Help Center" in the footer
+   - Access contextual help throughout the app
+   - Use the built-in help modal
+
+2. Documentation:
+   - User Manual (this document)
+   - Quick Reference guide
+   - Video tutorials (when available)
+
+3. Direct Support:
+   - Email: support@edutrack-ai.com
+   - GitHub Issues: Submit technical issues
+   - Academic Support: Contact through app
+
+FEATURE REQUESTS
+----------------
+We welcome suggestions for new features:
+- Use the feedback system in the app
+- Email: feedback@edutrack-ai.com
+- GitHub repository: Suggest improvements
+
+BUG REPORTS
+-----------
+To report bugs:
+1. Describe the issue clearly
+2. Include steps to reproduce
+3. Mention your browser and device
+4. Include screenshots if helpful
+5. Submit through app or email: bugs@edutrack-ai.com
+
+UPDATES AND MAINTENANCE
+----------------------
+- System updates are applied automatically
+- Maintenance windows are announced in advance
+- New features are rolled out gradually
+- Version history available in the app
+
+================================================================================
+
+Thank you for using EduTrack AI! We're committed to helping you achieve 
+academic success through intelligent attendance management and AI-powered insights.
+
+For the latest updates and information, visit our website or check the app's 
+help section regularly.
+
+================================================================================
+End of User Manual
+================================================================================
