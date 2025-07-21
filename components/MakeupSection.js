@@ -5,12 +5,14 @@ import {
     AcademicCapIcon,
     CalendarIcon,
     ClockIcon,
-    CheckCircleIcon
+    CheckCircleIcon,
+    ArrowPathIcon,
+    TrashIcon
 } from '@heroicons/react/24/outline';
 import { subjects } from '../lib/scheduleData';
 import { cn } from '../lib/utils';
 
-export default function MakeupSection({ userData, onSelectMakeup, onOpenMakeupModal }) {
+export default function MakeupSection({ userData, onSelectMakeup, onOpenMakeupModal, onRescheduleMakeup, onRemoveMakeup }) {
     // Handle both legacy single makeup and new multiple makeups
     const makeups = userData.makeups || [];
     const hasAnyMakeups = makeups.length > 0 || userData.makeup?.needed;
@@ -109,16 +111,44 @@ export default function MakeupSection({ userData, onSelectMakeup, onOpenMakeupMo
                                         )}
                                     </h3>
                                     
-                                    {!hasSelectedMakeup && (
-                                        <motion.button
-                                            onClick={() => onOpenMakeupModal(makeup.subjectToMakeup, index)}
-                                            className="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/40 text-orange-300 rounded-lg font-medium transition-colors text-sm"
-                                            whileHover={{ scale: 1.05 }}
-                                            whileTap={{ scale: 0.95 }}
-                                        >
-                                            Choose Makeup
-                                        </motion.button>
-                                    )}
+                                    <div className="flex space-x-2">
+                                        {!hasSelectedMakeup && (
+                                            <motion.button
+                                                onClick={() => onOpenMakeupModal(makeup.subjectToMakeup, index)}
+                                                className="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/40 text-orange-300 rounded-lg font-medium transition-colors text-sm"
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                            >
+                                                Choose Makeup
+                                            </motion.button>
+                                        )}
+                                        
+                                        {hasSelectedMakeup && (
+                                            <>
+                                                <motion.button
+                                                    onClick={() => onRescheduleMakeup && onRescheduleMakeup(makeup.subjectToMakeup, index)}
+                                                    className="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-300 rounded-lg font-medium transition-colors text-xs flex items-center space-x-1"
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    title="Reschedule makeup class"
+                                                >
+                                                    <ArrowPathIcon className="w-3 h-3" />
+                                                    <span>Reschedule</span>
+                                                </motion.button>
+                                                
+                                                <motion.button
+                                                    onClick={() => onRemoveMakeup && onRemoveMakeup(makeup.subjectToMakeup, index)}
+                                                    className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 rounded-lg font-medium transition-colors text-xs flex items-center space-x-1"
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                    title="Remove makeup class"
+                                                >
+                                                    <TrashIcon className="w-3 h-3" />
+                                                    <span>Remove</span>
+                                                </motion.button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                                 
                                 <div className="space-y-2">

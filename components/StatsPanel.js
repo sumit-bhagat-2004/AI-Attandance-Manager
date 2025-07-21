@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Target, Award, AlertTriangle, Star } from 'lucide-react';
-import { subjects, calculateTotalClassesHeld } from '../lib/scheduleData';
+import { subjects, calculateTotalClassesHeld, getEffectiveCycleStartDate } from '../lib/scheduleData';
 import { getAttendanceColor, getAttendanceTextColor, calculateSubjectAttendance, cn } from '../lib/utils';
 
 export default function StatsPanel({ userData }) {
@@ -9,15 +9,29 @@ export default function StatsPanel({ userData }) {
         return calculateSubjectAttendance ? calculateSubjectAttendance(userData, code) : 0;
     };
 
+    const getSubjectStats = (code) => {
+        const effectiveStartDate = getEffectiveCycleStartDate(userData);
+        const attendedCount = Object.values(userData.history || {}).reduce((acc, day) => {
+            return acc + (day[code] === 'attended' ? 1 : 0);
+        }, 0);
+        const totalHeld = calculateTotalClassesHeld(code, effectiveStartDate, new Date());
+        const percentage = getPercentage(code);
+        
+        return {
+            code,
+            name: subjects[code].name,
+            percentage,
+            attended: attendedCount,
+            total: totalHeld,
+            missed: totalHeld - attendedCount,
+            isLab: code.startsWith('LAB'),
+            weight: code.startsWith('LAB') ? 2 : 1
+        };
+    };
+
     const getAllSubjects = () => {
         return Object.keys(subjects)
-            .filter(code => !code.startsWith('TRAIN'))
-            .map(code => ({
-                code,
-                name: subjects[code].name,
-                percentage: getPercentage(code),
-                isLab: code.startsWith('LAB')
-            }))
+            .map(code => getSubjectStats(code))
             .sort((a, b) => b.percentage - a.percentage);
     };
 
@@ -205,6 +219,14 @@ export default function StatsPanel({ userData }) {
                                 }`}>
                                     {subject.percentage}%
                                 </span>
+                            </div>
+                            
+                            {/* Attendance Stats */}
+                            <div className="flex justify-between items-center mb-2 text-xs text-gray-400">
+                                <span>Attended: <span className="text-green-400 font-medium">{subject.attended}</span> / <span className="text-gray-300 font-medium">{subject.total}</span></span>
+                                {subject.missed > 0 && (
+                                    <span>Missed: <span className="text-red-400 font-medium">{subject.missed}</span></span>
+                                )}
                             </div>
                             
                             <div className="relative w-full bg-gray-700/50 rounded-full h-2 overflow-hidden">

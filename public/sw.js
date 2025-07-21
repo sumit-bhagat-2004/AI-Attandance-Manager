@@ -44,6 +44,7 @@ self.addEventListener('install', (event) => {
         console.log('Cache addAll failed:', error);
       })
   );
+  // Skip waiting to activate immediately
   self.skipWaiting();
 });
 
@@ -62,7 +63,15 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
+  // Claim clients immediately
   self.clients.claim();
+  
+  // Notify clients of the update
+  self.clients.matchAll().then((clients) => {
+    clients.forEach((client) => {
+      client.postMessage({ type: 'SW_UPDATED' });
+    });
+  });
 });
 
 // Fetch event - serve from cache, fallback to network
@@ -269,3 +278,13 @@ async function clearStoredAttendanceData() {
   // Implement IndexedDB clear operations
   return true;
 }
+
+// Message event handler for communication with clients
+self.addEventListener('message', (event) => {
+  console.log('Service Worker received message:', event.data);
+  
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    // Skip the waiting phase and activate immediately
+    self.skipWaiting();
+  }
+});

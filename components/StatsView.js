@@ -13,12 +13,14 @@ import {
     CheckCircleIcon,
     XCircleIcon
 } from '@heroicons/react/24/outline';
-import { subjects, calculateTotalClassesHeld } from '../lib/scheduleData';
+import { subjects, calculateTotalClassesHeld, getEffectiveCycleStartDate } from '../lib/scheduleData';
 import { calculateSubjectAttendance, cn } from '../lib/utils';
 
 export default function StatsView({ userData }) {
     // Calculate detailed statistics for ALL subjects (including labs and training)
     const getSubjectStats = () => {
+        const effectiveStartDate = getEffectiveCycleStartDate(userData);
+        
         return Object.keys(subjects)
             .map(code => {
                 const attendedCount = Object.values(userData.history).reduce((acc, day) => {
@@ -29,7 +31,7 @@ export default function StatsView({ userData }) {
                     return acc + (day[code] === 'skipped' ? 1 : 0);
                 }, 0);
 
-                const totalHeld = calculateTotalClassesHeld(code, new Date(userData.cycleStartDate), new Date());
+                const totalHeld = calculateTotalClassesHeld(code, effectiveStartDate, new Date());
                 const percentage = calculateSubjectAttendance ? calculateSubjectAttendance(userData, code) : 
                     (totalHeld === 0 ? 100 : Math.round((attendedCount / totalHeld) * 100));
 

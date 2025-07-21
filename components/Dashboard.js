@@ -28,41 +28,78 @@ import ReportManagerModal from './ReportManagerModal';
 import PWAInstallPrompt from './PWAInstallPrompt';
 import Footer from './Footer';
 import { cn, formatDate } from '../lib/utils';
-import { subjects, calculateTotalClassesHeld } from '../lib/scheduleData';
+import { subjects, calculateTotalClassesHeld, getEffectiveCycleStartDate } from '../lib/scheduleData';
 import { DateControlPanel } from '../lib/dateUtils';
 import { generateWeeklyReport, generateAllWeeklyReports, getWeeklyReportForWeek, shouldAutoGenerateReport } from '../lib/weeklyReportGenerator';
 
-// Local implementation as fallback
+// Local implementation with proper weightings
 const calculateOverallAttendanceLocal = (userData) => {
   try {
     if (!userData || !userData.history) return 0;
 
-    const regularSubjects = Object.keys(subjects).filter(
+    const allSubjects = Object.keys(subjects);
+    const regularSubjects = allSubjects.filter(
       (code) => !code.startsWith('LAB') && !code.startsWith('TRAIN')
     );
+    const labSubjects = allSubjects.filter((code) => code.startsWith('LAB'));
 
-    if (regularSubjects.length === 0) return 0;
+    if (regularSubjects.length === 0 && labSubjects.length === 0) return 0;
 
-    let totalAttended = 0;
-    let totalClasses = 0;
+    let totalWeightedAttended = 0;
+    let totalWeightedClasses = 0;
 
+    // Calculate regular subjects (weight = 1)
     regularSubjects.forEach((code) => {
       const attendedCount = Object.values(userData.history).reduce((acc, day) => {
         return acc + (day[code] === 'attended' ? 1 : 0);
       }, 0);
 
+      // Use effective cycle start date (earliest date in history or cycle start date)
+      const effectiveStartDate = getEffectiveCycleStartDate(userData);
+      
       const totalHeld = calculateTotalClassesHeld(
         code,
-        new Date(userData.cycleStartDate),
+        effectiveStartDate,
         new Date()
       );
 
-      totalAttended += attendedCount;
-      totalClasses += totalHeld;
+      // Regular subjects have weight = 1
+      totalWeightedAttended += attendedCount * 1;
+      totalWeightedClasses += totalHeld * 1;
     });
 
-    if (totalClasses === 0) return 100;
-    return Math.round((totalAttended / totalClasses) * 100);
+    // Calculate lab subjects (weight = 2)
+    labSubjects.forEach((code) => {
+      const attendedCount = Object.values(userData.history).reduce((acc, day) => {
+        return acc + (day[code] === 'attended' ? 1 : 0);
+      }, 0);
+
+      // Use effective cycle start date (earliest date in history or cycle start date)
+      const effectiveStartDate = getEffectiveCycleStartDate(userData);
+      
+      const totalHeld = calculateTotalClassesHeld(
+        code,
+        effectiveStartDate,
+        new Date()
+      );
+
+      // Lab subjects have weight = 2
+      totalWeightedAttended += attendedCount * 2;
+      totalWeightedClasses += totalHeld * 2;
+    });
+
+    // Add ECA credits (weight = 1 each)
+    if (userData.ecaRecords) {
+      const ecaCredits = Object.values(userData.ecaRecords).reduce((total, eca) => {
+        return total + (eca.count || 1);
+      }, 0);
+      
+      // Each ECA adds 1 weighted attendance point
+      totalWeightedAttended += ecaCredits * 1;
+    }
+
+    if (totalWeightedClasses === 0) return 100;
+    return Math.min(Math.round((totalWeightedAttended / totalWeightedClasses) * 100), 100);
   } catch (error) {
     console.error('Error calculating overall attendance:', error);
     return 0;
@@ -183,6 +220,83 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
             }
         } catch (error) {
             console.error("Failed to set makeup class:", error);
+        }
+    };
+
+    // Handle makeup class rescheduling - only if more optional classes available and no pending makeups
+    const handleRescheduleMakeup = async (subjectToMakeup, makeupIndex) => {
+        try {
+            // Check if rescheduling is allowed
+            const currentMakeups = userData.makeups || [];
+            const pendingMakeups = currentMakeups.filter(m => !m.makeupTarget);
+            
+            if (pendingMakeups.length > 1) {
+                alert("Please complete all pending makeup selections before rescheduling.");
+                return;
+            }
+
+            // Check if more optional classes are available
+            const response = await fetch('/api/data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'checkOptionalClasses',
+                    payload: { user: currentUser, subjectToMakeup }
+                }),
+            });
+            
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message);
+            }
+
+            if (!data.hasMoreOptionalClasses) {
+                alert("No more optional classes available for rescheduling. All available slots are occupied.");
+                return;
+            }
+
+            // Open makeup modal for rescheduling
+            setSelectedMakeupSubject(subjectToMakeup);
+            setSelectedMakeupIndex(makeupIndex);
+            setShowMakeupModal(true);
+            
+        } catch (error) {
+            console.error("Failed to reschedule makeup:", error);
+            alert("Error rescheduling makeup class. Please try again.");
+        }
+    };
+
+    // Handle makeup class removal
+    const handleRemoveMakeup = async (subjectToMakeup, makeupIndex) => {
+        try {
+            const confirmed = window.confirm(
+                "Are you sure you want to remove this makeup class? This will affect your mandatory attendance requirements."
+            );
+            
+            if (!confirmed) return;
+
+            const response = await fetch('/api/data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'removeMakeup',
+                    payload: { 
+                        user: currentUser, 
+                        subjectToMakeup,
+                        makeupIndex
+                    }
+                }),
+            });
+            
+            const data = await response.json();
+            if (response.ok) {
+                updateUserData(data.updatedData);
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            console.error("Failed to remove makeup:", error);
+            alert("Error removing makeup class. Please try again.");
         }
     };
 
@@ -1163,6 +1277,31 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                                     </motion.button>
                                 </div>
                                 
+                                {/* ECA and PWA Buttons - Mobile */}
+                                <div className="grid grid-cols-2 gap-2 border-t border-gray-700/50 pt-3 mt-3">
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => {
+                                            setShowECAModal(true);
+                                            setIsMobileMenuOpen(false);
+                                        }}
+                                        className="flex items-center justify-center px-3 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium rounded-lg transition-all duration-200 shadow-lg"
+                                        title="Add Extra Curricular Activity"
+                                    >
+                                        <AcademicCapIcon className="h-4 w-4 mr-2" />
+                                        Add ECA
+                                    </motion.button>
+                                    
+                                    <div className="flex items-center justify-center">
+                                        <PWAInstallPrompt 
+                                            variant="button" 
+                                            isVisible={true}
+                                            onClose={() => setIsMobileMenuOpen(false)}
+                                        />
+                                    </div>
+                                </div>
+                                
                                 {/* Date Control Panel - Mobile */}
                                 <div className="border-t border-gray-700/50 pt-3 mt-3">
                                     <p className="text-xs text-gray-400 mb-2 text-center">🕰️ Time Machine</p>
@@ -1332,6 +1471,8 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                                             setSelectedMakeupIndex(index);
                                             setShowMakeupModal(true);
                                         }}
+                                        onRescheduleMakeup={handleRescheduleMakeup}
+                                        onRemoveMakeup={handleRemoveMakeup}
                                     />
                                 </div>
                             </div>

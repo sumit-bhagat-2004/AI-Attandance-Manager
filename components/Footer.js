@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/router';
 import { 
@@ -11,7 +11,9 @@ import {
   Mail,
   Github,
   Heart,
-  X
+  X,
+  RefreshCw,
+  AlertCircle
 } from 'lucide-react';
 import HelpModal from './HelpModal';
 
@@ -61,6 +63,96 @@ const Footer = () => {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [serviceWorker, setServiceWorker] = useState(null);
+
+  // Check for PWA updates
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready
+        .then((registration) => {
+          setServiceWorker(registration);
+          
+          // Check for updates on load
+          registration.update();
+          
+          // Listen for new service worker
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  setUpdateAvailable(true);
+                }
+              });
+            }
+          });
+
+          // Listen for waiting service worker
+          if (registration.waiting) {
+            setUpdateAvailable(true);
+          }
+        })
+        .catch((error) => {
+          console.log('Service Worker registration failed:', error);
+        });
+
+      // Listen for service worker messages
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'SW_UPDATED') {
+          setUpdateAvailable(true);
+        }
+      });
+
+      // Periodic update check (every 10 minutes)
+      const updateInterval = setInterval(() => {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.update();
+        });
+      }, 10 * 60 * 1000);
+
+      return () => clearInterval(updateInterval);
+    }
+  }, []);
+
+  // Handle PWA update
+  const handlePWAUpdate = useCallback(async () => {
+    if (!serviceWorker || !updateAvailable) return;
+
+    setIsUpdating(true);
+    
+    try {
+      // Clear app caches (but not Clerk auth)
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        const appCacheNames = cacheNames.filter(name => 
+          name.includes('edutrack-ai') && !name.includes('clerk')
+        );
+        
+        await Promise.all(
+          appCacheNames.map(name => caches.delete(name))
+        );
+      }
+
+      // Skip waiting and activate new service worker
+      if (serviceWorker.waiting) {
+        serviceWorker.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+
+      // Wait for the new service worker to take control
+      await new Promise((resolve) => {
+        navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });
+      });
+
+      // Reload the page to get the updated app
+      window.location.reload();
+      
+    } catch (error) {
+      console.error('Error updating PWA:', error);
+      setIsUpdating(false);
+    }
+  }, [serviceWorker, updateAvailable]);
 
   const handleCloseHelpModal = useCallback(() => setShowHelpModal(false), []);
   const handleClosePrivacyModal = useCallback(() => setShowPrivacyModal(false), []);
@@ -198,9 +290,9 @@ const Footer = () => {
               <div className="col-span-1">
                 <h3 className="text-white font-semibold mb-4">App Info</h3>
                 <ul className="space-y-3 text-sm text-gray-400">
-                  <li>Version: 1.0.0</li>
+                  <li>Version: 1.0.4</li>
                   <li>Release: July 2025</li>
-                  <li>Platform: Web App</li>
+                  <li>Platform: PWA</li>
                   <li>
                     <span className="flex items-center space-x-1">
                       <span>Status:</span>
@@ -210,6 +302,24 @@ const Footer = () => {
                       </span>
                     </span>
                   </li>
+                  {updateAvailable && (
+                    <li>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handlePWAUpdate}
+                        disabled={isUpdating}
+                        className="flex items-center space-x-2 text-orange-400 hover:text-orange-300 transition-colors font-medium"
+                      >
+                        {isUpdating ? (
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <AlertCircle className="h-4 w-4" />
+                        )}
+                        <span>{isUpdating ? 'Updating...' : 'Update Available!'}</span>
+                      </motion.button>
+                    </li>
+                  )}
                 </ul>
               </div>
             </div>

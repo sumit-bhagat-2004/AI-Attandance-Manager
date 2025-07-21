@@ -5,8 +5,8 @@ import toast from 'react-hot-toast';
 import ClassCard from './ClassCard';
 import MakeupModal from './MakeupModal';
 import MakeupAlert from './MakeupAlert';
-import { fullSchedule, bunkSchedule, mandatorySchedule, isMandatoryClass, subjects } from '../lib/scheduleData';
-import { cn, formatDate, formatDateToLocalString, isClassInPast } from '../lib/utils';
+import { fullSchedule, bunkSchedule, mandatorySchedule, isMandatoryClass, subjects, getEffectiveCycleStartDate, getWeekInCycle, calculateTotalClassesHeld } from '../lib/scheduleData';
+import { cn, formatDate, formatDateToLocalString, isClassInPast, calculateSubjectAttendance } from '../lib/utils';
 
 export default function ScheduleView({ user, userData, updateUserData, setGeminiResult, setShowConfetti, onOpenMakeupModal }) {
     const [today, setToday] = useState(new Date());
@@ -45,7 +45,8 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
         }
         // If marking attendance for past classes, show confirmation for mandatory classes
         else if (isPastDate) {
-            const currentWeek = getWeekInCycle(new Date(userData.cycleStartDate), today);
+            const effectiveCycleStart = getEffectiveCycleStartDate(userData);
+            const currentWeek = getWeekInCycle(effectiveCycleStart, today);
             const dayOfWeek = today.getDay();
             const isMandatory = isMandatoryClass(currentWeek, dayOfWeek, classCode);
             
@@ -268,11 +269,9 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const currentDayName = dayNames[dayOfWeek];
     
-    // Calculate week in cycle for determining recommended bunks
-    const cycleStartDate = new Date(userData.cycleStartDate);
-    const diffTime = Math.abs(today - cycleStartDate);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    const weekInCycle = (Math.floor(diffDays / 7) % 5) + 1;
+    // Calculate week in cycle for determining recommended bunks (using effective cycle start like StatsView)
+    const effectiveCycleStart = getEffectiveCycleStartDate(userData);
+    const weekInCycle = getWeekInCycle(effectiveCycleStart, today);
     
     // Get daily bunks for recommended bunk logic (weekly + permanent)
     const weeklyBunks = bunkSchedule[weekInCycle]?.[dayOfWeek] || [];
@@ -306,6 +305,32 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
         // Time matching can be flexible since makeup classes might not have exact time matches
         return todayStr === makeupDate && classCode === makeupTarget;
     };
+
+    // Calculate overall percentage using simple average (same logic as StatsPanel)
+    const calculateOverallPercentage = () => {
+        try {
+            if (!userData || !userData.history) return 0;
+
+            // Get ALL subjects including training (same as updated StatsPanel.js)
+            const allSubjects = Object.keys(subjects);
+
+            if (allSubjects.length === 0) return 0;
+
+            // Calculate simple average of individual subject percentages (same as StatsPanel.js line 60)
+            const totalPercentage = allSubjects.reduce((sum, code) => {
+                const percentage = calculateSubjectAttendance ? calculateSubjectAttendance(userData, code) : 0;
+                return sum + percentage;
+            }, 0);
+
+            const averageAttendance = Math.round(totalPercentage / allSubjects.length);
+            return averageAttendance;
+        } catch (error) {
+            console.error('Error calculating overall attendance:', error);
+            return 0;
+        }
+    };
+
+    const overallPercentage = calculateOverallPercentage();
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -382,6 +407,20 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
                         <div className="bg-secondary-500/10 border border-secondary-500/30 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">
                             <div className="text-sm font-bold text-secondary-400">{dailyBunks.length}</div>
                             <div className="text-xs text-gray-400">Optional</div>
+                        </div>
+                        <div className={`border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 ${
+                            overallPercentage >= 90 ? "bg-green-500/10 border-green-500/30" :
+                            overallPercentage >= 80 ? "bg-blue-500/10 border-blue-500/30" :
+                            overallPercentage >= 75 ? "bg-yellow-500/10 border-yellow-500/30" :
+                            "bg-red-500/10 border-red-500/30"
+                        }`}>
+                            <div className={`text-sm font-bold ${
+                                overallPercentage >= 90 ? "text-green-400" :
+                                overallPercentage >= 80 ? "text-blue-400" :
+                                overallPercentage >= 75 ? "text-yellow-400" :
+                                "text-red-400"
+                            }`}>{overallPercentage}%</div>
+                            <div className="text-xs text-gray-400">Overall</div>
                         </div>
                     </div>
                 </div>
