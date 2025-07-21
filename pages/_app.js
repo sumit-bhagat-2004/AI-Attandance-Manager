@@ -5,19 +5,22 @@ import { ClerkProvider } from '@clerk/nextjs';
 
 function MyApp({ Component, pageProps }) {
   useEffect(() => {
-    // Register service worker for PWA
-    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+    // Register service worker for PWA (enable in development for testing)
+    if ('serviceWorker' in navigator) {
+      console.log('Registering service worker...');
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
           .then((registration) => {
-            console.log('SW registered: ', registration);
+            console.log('✅ Service Worker registered successfully:', registration);
             
             // Check for updates
             registration.addEventListener('updatefound', () => {
+              console.log('Service Worker update found');
               const newWorker = registration.installing;
               if (newWorker) {
                 newWorker.addEventListener('statechange', () => {
                   if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    console.log('New service worker installed');
                     // New content is available, show update notification
                     if (confirm('New version available! Reload to update?')) {
                       window.location.reload();
@@ -28,15 +31,19 @@ function MyApp({ Component, pageProps }) {
             });
           })
           .catch((registrationError) => {
-            console.log('SW registration failed: ', registrationError);
+            console.error('❌ Service Worker registration failed:', registrationError);
           });
       });
+    } else {
+      console.log('Service Worker not supported in this browser');
     }
 
-    // Handle PWA installation events
+    // Handle PWA installation events with better debugging
     let deferredPrompt;
     
     window.addEventListener('beforeinstallprompt', (e) => {
+      console.log('🚀 beforeinstallprompt event fired - PWA can be installed!');
+      console.log('Event details:', e);
       // Prevent Chrome 67 and earlier from automatically showing the prompt
       e.preventDefault();
       // Stash the event so it can be triggered later
@@ -44,12 +51,14 @@ function MyApp({ Component, pageProps }) {
       
       // Store the event for custom install button
       window.deferredPrompt = deferredPrompt;
+      console.log('PWA install prompt deferred - ready for custom install button');
     });
 
     window.addEventListener('appinstalled', () => {
-      console.log('EduTrack AI was installed');
+      console.log('🎉 EduTrack AI PWA was successfully installed!');
       // Hide install button
       window.deferredPrompt = null;
+      deferredPrompt = null;
     });
 
     // Handle online/offline events

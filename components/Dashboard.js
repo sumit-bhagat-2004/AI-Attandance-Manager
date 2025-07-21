@@ -85,23 +85,9 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
     const [showReportModal, setShowReportModal] = useState(false);
     const [weeklyReports, setWeeklyReports] = useState([]);
     const [isGeneratingReports, setIsGeneratingReports] = useState(false);
-    const [showPWAInstall, setShowPWAInstall] = useState(false);
 
     // Debug: Log the current user
     console.log('🏠 Dashboard user:', currentUser);
-
-    // Check for PWA install prompt
-    useEffect(() => {
-        // Show PWA install prompt after 30 seconds if not installed
-        const timer = setTimeout(() => {
-            const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-            if (!isInstalled && window.deferredPrompt) {
-                setShowPWAInstall(true);
-            }
-        }, 30000);
-
-        return () => clearTimeout(timer);
-    }, []);
 
     // Handle logout with Clerk
     const handleLogout = async () => {
@@ -1399,13 +1385,6 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                 onViewReport={handleViewReport}
                 onGenerateReport={generateAndSaveWeeklyReports}
                 isGenerating={isGeneratingReports}
-            />
-
-            {/* PWA Install Banner */}
-            <PWAInstallPrompt 
-                variant="banner" 
-                isVisible={showPWAInstall}
-                onClose={() => setShowPWAInstall(false)}
             />
 
             {/* Confetti Celebration */}

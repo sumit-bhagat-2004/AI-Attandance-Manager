@@ -340,14 +340,14 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
         <AnimatePresence>
             {isOpen && (
                 <motion.div
-                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[99999] flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[99999] flex items-center justify-center p-2 sm:p-4"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={onClose}
                 >
                     <motion.div
-                        className="bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+                        className="bg-gray-900/95 backdrop-blur-xl rounded-lg sm:rounded-2xl border border-gray-700/50 shadow-2xl w-full h-full sm:max-w-2xl sm:w-full sm:max-h-[90vh] sm:h-auto overflow-hidden flex flex-col"
                         variants={modalVariants}
                         initial="hidden"
                         animate="visible"
@@ -355,12 +355,12 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-primary-600/20 to-secondary-600/20 p-6 border-b border-gray-700/50">
+                        <div className="bg-gradient-to-r from-primary-600/20 to-secondary-600/20 p-4 sm:p-6 border-b border-gray-700/50 flex-shrink-0">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
-                                    <CalendarDaysIcon className="w-8 h-8 text-primary-400" />
+                                    <CalendarDaysIcon className="w-6 h-6 sm:w-8 sm:h-8 text-primary-400" />
                                     <div>
-                                        <h2 className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-secondary-400 bg-clip-text text-transparent">
+                                        <h2 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-primary-400 to-secondary-400 bg-clip-text text-transparent">
                                             {selectedDate.toLocaleDateString('default', { 
                                                 weekday: 'long', 
                                                 year: 'numeric', 
@@ -368,7 +368,7 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
                                                 day: 'numeric' 
                                             })}
                                         </h2>
-                                        <p className="text-gray-400 text-sm">
+                                        <p className="text-gray-400 text-xs sm:text-sm">
                                             {isToday ? '📅 Today' : `${Math.abs(Math.floor((new Date() - selectedDate) / (1000 * 60 * 60 * 24)))} days ${selectedDate < new Date() ? 'ago' : 'from now'}`}
                                         </p>
                                     </div>
@@ -384,42 +384,44 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
                             </div>
                         </div>
 
-                        {/* Summary Stats */}
-                        <motion.div 
-                            className="p-6 border-b border-gray-700/30"
-                            variants={itemVariants}
-                        >
-                            <div className="grid grid-cols-3 gap-4">
-                                <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/20">
-                                    <div className="flex items-center space-x-2">
-                                        <CheckCircleIcon className="w-5 h-5 text-green-400" />
-                                        <span className="text-sm text-gray-300">Attended</span>
+                        {/* Scrollable Content */}
+                        <div className="flex-1 overflow-y-auto">
+                            {/* Summary Stats */}
+                            <motion.div 
+                                className="p-4 sm:p-6 border-b border-gray-700/30"
+                                variants={itemVariants}
+                            >
+                            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                                <div className="bg-green-500/10 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-green-500/20">
+                                    <div className="flex items-center space-x-1 sm:space-x-2">
+                                        <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-400" />
+                                        <span className="text-xs sm:text-sm text-gray-300">Attended</span>
                                     </div>
-                                    <p className="text-2xl font-bold text-green-400 mt-1">{attendedCount}</p>
+                                    <p className="text-lg sm:text-2xl font-bold text-green-400 mt-1">{attendedCount}</p>
                                 </div>
-                                <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/20">
-                                    <div className="flex items-center space-x-2">
-                                        <XCircleIcon className="w-5 h-5 text-red-400" />
-                                        <span className="text-sm text-gray-300">Missed</span>
+                                <div className="bg-red-500/10 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-red-500/20">
+                                    <div className="flex items-center space-x-1 sm:space-x-2">
+                                        <XCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
+                                        <span className="text-xs sm:text-sm text-gray-300">Missed</span>
                                     </div>
-                                    <p className="text-2xl font-bold text-red-400 mt-1">{skippedCount}</p>
+                                    <p className="text-lg sm:text-2xl font-bold text-red-400 mt-1">{skippedCount}</p>
                                 </div>
-                                <div className="bg-primary-500/10 rounded-xl p-4 border border-primary-500/20">
-                                    <div className="flex items-center space-x-2">
-                                        <CalendarDaysIcon className="w-5 h-5 text-primary-400" />
-                                        <span className="text-sm text-gray-300">Total</span>
+                                <div className="bg-primary-500/10 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-primary-500/20">
+                                    <div className="flex items-center space-x-1 sm:space-x-2">
+                                        <CalendarDaysIcon className="w-4 h-4 sm:w-5 sm:h-5 text-primary-400" />
+                                        <span className="text-xs sm:text-sm text-gray-300">Total</span>
                                     </div>
-                                    <p className="text-2xl font-bold text-primary-400 mt-1">{totalClasses}</p>
+                                    <p className="text-lg sm:text-2xl font-bold text-primary-400 mt-1">{totalClasses}</p>
                                 </div>
                             </div>
                         </motion.div>
 
-                        {/* Class List */}
-                        <div className="p-6 max-h-96 overflow-y-auto">
-                            <h3 className="text-lg font-semibold text-gray-300 mb-4 flex items-center space-x-2">
-                                <ClockIcon className="w-5 h-5 text-secondary-400" />
-                                <span>Class Schedule</span>
-                            </h3>
+                            {/* Class List */}
+                            <div className="p-4 sm:p-6">
+                                <h3 className="text-base sm:text-lg font-semibold text-gray-300 mb-4 flex items-center space-x-2">
+                                    <ClockIcon className="w-4 h-4 sm:w-5 sm:h-5 text-secondary-400" />
+                                    <span>Class Schedule</span>
+                                </h3>
 
                             {totalClasses === 0 ? (
                                 <motion.div 
@@ -666,6 +668,8 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
                                 </div>
                             </motion.div>
                         )}
+                        </div>
+                        {/* End of scrollable content div */}
                     </motion.div>
                 </motion.div>
             )}

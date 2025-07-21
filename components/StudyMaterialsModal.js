@@ -68,14 +68,14 @@ export default function StudyMaterialsModal({ isOpen, onClose, classCode, classN
         <AnimatePresence>
             {isOpen && (
                 <motion.div
-                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100000] flex items-center justify-center p-4"
+                    className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100000] flex items-center justify-center p-2 sm:p-4"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={onClose}
                 >
                     <motion.div
-                        className="bg-gray-900/95 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+                        className="bg-gray-900/95 backdrop-blur-xl rounded-lg sm:rounded-2xl border border-gray-700/50 shadow-2xl w-full h-full sm:max-w-4xl sm:w-full sm:max-h-[90vh] sm:h-auto overflow-hidden flex flex-col"
                         variants={modalVariants}
                         initial="hidden"
                         animate="visible"
@@ -83,40 +83,44 @@ export default function StudyMaterialsModal({ isOpen, onClose, classCode, classN
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-purple-600/20 to-indigo-600/20 p-6 border-b border-gray-700/50">
+                        <div className="bg-gradient-to-r from-purple-600/20 to-indigo-600/20 p-4 sm:p-6 border-b border-gray-700/50 flex-shrink-0">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-4">
+                                <div className="flex items-center space-x-3 sm:space-x-4">
                                     <motion.div
-                                        className="w-12 h-12 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg"
+                                        className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg"
                                         animate={{ rotate: [0, 360] }}
                                         transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                                     >
-                                        <BookOpenIcon className="w-6 h-6 text-white" />
+                                        <BookOpenIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                                     </motion.div>
                                     <div>
-                                        <h3 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+                                        <h3 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
                                             Study Materials
                                         </h3>
-                                        <p className="text-gray-400">{subjectName}</p>
-                                        <p className="text-sm text-gray-500">{studyMaterials.length} entries from students</p>
+                                        <p className="text-gray-400 text-sm sm:text-base">{subjectName}</p>
+                                        <p className="text-xs sm:text-sm text-gray-500">{studyMaterials.length} entries from students</p>
                                     </div>
                                 </div>
                                 <motion.button
                                     onClick={onClose}
-                                    className="p-3 rounded-xl bg-gray-800/50 hover:bg-gray-700/50 transition-colors"
+                                    className="p-2 rounded-xl bg-gray-800/50 hover:bg-gray-700/50 transition-colors"
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
                                 >
-                                    <XMarkIcon className="w-6 h-6 text-gray-400" />
+                                    <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
                                 </motion.button>
                             </div>
+                        </div>
 
-                            {/* Filter Tabs */}
-                            <div className="flex space-x-1 mt-4 bg-gray-800/50 p-1 rounded-lg">
+                        {/* Scrollable Content */}
+                        <div className="flex-1 overflow-y-auto">
+                                {/* Filter Tabs */}
+                                <div className="p-4 sm:p-6 border-b border-gray-700/30">
+                                    <div className="flex flex-wrap sm:flex-nowrap gap-1 sm:gap-2 bg-gray-800/50 p-1 rounded-lg">
                                 {[
-                                    { id: 'all', label: 'All Materials', icon: BookOpenIcon },
-                                    { id: 'hints', label: 'Student Notes', icon: LightBulbIcon },
-                                    { id: 'ai', label: 'AI Generated', icon: SparklesIcon }
+                                    { id: 'all', label: 'All Materials', shortLabel: 'All', icon: BookOpenIcon },
+                                    { id: 'hints', label: 'Student Notes', shortLabel: 'Notes', icon: LightBulbIcon },
+                                    { id: 'ai', label: 'AI Generated', shortLabel: 'AI', icon: SparklesIcon }
                                 ].map((filter) => {
                                     const Icon = filter.icon;
                                     return (
@@ -124,7 +128,7 @@ export default function StudyMaterialsModal({ isOpen, onClose, classCode, classN
                                             key={filter.id}
                                             onClick={() => setSelectedFilter(filter.id)}
                                             className={cn(
-                                                "flex items-center space-x-2 px-4 py-2 rounded-md font-medium transition-all duration-200",
+                                                "flex items-center justify-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 rounded-md font-medium transition-all duration-200 flex-1 sm:flex-initial text-xs sm:text-sm",
                                                 selectedFilter === filter.id
                                                     ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg"
                                                     : "text-gray-400 hover:text-gray-300 hover:bg-gray-700/50"
@@ -132,8 +136,9 @@ export default function StudyMaterialsModal({ isOpen, onClose, classCode, classN
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                         >
-                                            <Icon className="w-4 h-4" />
-                                            <span>{filter.label}</span>
+                                            <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
+                                            <span className="hidden sm:inline">{filter.label}</span>
+                                            <span className="sm:hidden">{filter.shortLabel}</span>
                                         </motion.button>
                                     );
                                 })}
@@ -234,6 +239,7 @@ export default function StudyMaterialsModal({ isOpen, onClose, classCode, classN
                                     ))}
                                 </div>
                             )}
+                            </div>
                         </div>
                     </motion.div>
                 </motion.div>

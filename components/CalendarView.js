@@ -236,10 +236,10 @@ export default function CalendarView({ userData, currentUser }) {
             </motion.div>
 
             {/* Calendar Grid */}
-            <div className="p-8 bg-gradient-to-br from-gray-900/40 to-gray-800/40 backdrop-blur-sm">
+            <div className="p-2 sm:p-8 bg-gradient-to-br from-gray-900/40 to-gray-800/40 backdrop-blur-sm">
                 {/* Enhanced Day Headers */}
                 <motion.div 
-                    className="grid grid-cols-7 gap-4 mb-8"
+                    className="grid grid-cols-7 gap-1 sm:gap-4 mb-4 sm:mb-8"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.1 }}
@@ -248,7 +248,7 @@ export default function CalendarView({ userData, currentUser }) {
                         <motion.div 
                             key={day} 
                             className={cn(
-                                "text-center text-sm font-bold py-4 rounded-2xl backdrop-blur-md border-2 shadow-lg transition-all duration-300 relative overflow-hidden",
+                                "text-center text-xs sm:text-sm font-bold py-2 sm:py-4 rounded-lg sm:rounded-2xl backdrop-blur-md border border-2 shadow-lg transition-all duration-300 relative overflow-hidden",
                                 index === 0 || index === 6 
                                     ? "text-accent-200 bg-gradient-to-br from-accent-800/50 to-accent-900/50 border-accent-500/40 shadow-accent-500/20" 
                                     : "text-gray-200 bg-gradient-to-br from-gray-700/50 to-gray-800/50 border-gray-500/40 shadow-gray-500/20"
@@ -258,6 +258,14 @@ export default function CalendarView({ userData, currentUser }) {
                             transition={{ delay: 0.1 * index }}
                             whileHover={{ scale: 1.05, y: -3 }}
                         >
+                            {/* Mobile: Show abbreviated day names */}
+                            <span className="sm:hidden font-semibold">
+                                {day.slice(0, 3)}
+                            </span>
+                            {/* Desktop: Show full day names */}
+                            <span className="hidden sm:inline">
+                                {day}
+                            </span>
                             {/* Background shine effect */}
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 opacity-0 hover:opacity-100 transition-opacity duration-500" />
                             <div className="relative">
@@ -272,7 +280,7 @@ export default function CalendarView({ userData, currentUser }) {
                 <AnimatePresence mode="wait">
                     <motion.div 
                         key={currentDate.getMonth() + '-' + currentDate.getFullYear()}
-                        className="grid grid-cols-7 gap-4"
+                        className="grid grid-cols-7 gap-1 sm:gap-4"
                         variants={containerVariants}
                         initial="hidden"
                         animate="visible"
@@ -282,7 +290,7 @@ export default function CalendarView({ userData, currentUser }) {
                         {Array(startingDayIndex).fill(null).map((_, index) => (
                             <motion.div 
                                 key={`empty-${index}`} 
-                                className="h-32 rounded-3xl bg-gradient-to-br from-gray-800/20 to-gray-900/20 border border-gray-700/20 backdrop-blur-sm"
+                                className="h-16 sm:h-32 rounded-xl sm:rounded-3xl bg-gradient-to-br from-gray-800/20 to-gray-900/20 border border-gray-700/20 backdrop-blur-sm"
                                 variants={dayVariants}
                             />
                         ))}
@@ -310,12 +318,12 @@ export default function CalendarView({ userData, currentUser }) {
                                 <motion.div 
                                     key={day.toISOString()} 
                                     className={cn(
-                                        "relative h-32 rounded-3xl p-4 border-2 transition-all duration-300 overflow-hidden group cursor-pointer backdrop-blur-md shadow-xl",
+                                        "relative h-16 sm:h-32 rounded-xl sm:rounded-3xl p-2 sm:p-4 border border-2 transition-all duration-300 overflow-hidden group cursor-pointer backdrop-blur-md shadow-xl",
                                         hasMakeupClass
-                                            ? "bg-gradient-to-br from-orange-500/60 to-red-500/60 border-orange-400/90 shadow-2xl shadow-orange-500/50 ring-2 ring-orange-400/40"
+                                            ? "bg-gradient-to-br from-orange-500/60 to-red-500/60 border-orange-400/90 shadow-2xl shadow-orange-500/50 ring-1 sm:ring-2 ring-orange-400/40"
                                             : isCurrentDay 
-                                                ? "bg-gradient-to-br from-primary-500/60 to-secondary-500/60 border-primary-400/90 shadow-2xl shadow-primary-500/50 ring-4 ring-primary-400/40" 
-                                                : "bg-gradient-to-br from-gray-800/70 to-gray-900/70 border-gray-600/50 hover:border-primary-500/70 hover:from-gray-700/80 hover:to-gray-800/80 hover:shadow-2xl hover:shadow-primary-500/30 hover:ring-2 hover:ring-primary-500/40"
+                                                ? "bg-gradient-to-br from-primary-500/60 to-secondary-500/60 border-primary-400/90 shadow-2xl shadow-primary-500/50 ring-2 sm:ring-4 ring-primary-400/40" 
+                                                : "bg-gradient-to-br from-gray-800/70 to-gray-900/70 border-gray-600/50 hover:border-primary-500/70 hover:from-gray-700/80 hover:to-gray-800/80 hover:shadow-2xl hover:shadow-primary-500/30 hover:ring-1 sm:hover:ring-2 hover:ring-primary-500/40"
                                     )}
                                     variants={dayVariants}
                                     whileHover={{ scale: 1.04, y: -4 }}
@@ -334,10 +342,10 @@ export default function CalendarView({ userData, currentUser }) {
                                     </div>
 
                                     {/* Enhanced Date Number */}
-                                    <div className="relative flex justify-between items-start mb-3">
+                                    <div className="relative flex justify-between items-start mb-1 sm:mb-3">
                                         <motion.span 
                                             className={cn(
-                                                "text-xl font-black backdrop-blur-md rounded-xl px-3 py-2 shadow-lg border",
+                                                "text-sm sm:text-xl font-black backdrop-blur-md rounded-lg sm:rounded-xl px-2 sm:px-3 py-1 sm:py-2 shadow-lg border",
                                                 isCurrentDay 
                                                     ? "text-white bg-gradient-to-br from-primary-500/50 to-secondary-500/50 border-primary-300/70 shadow-primary-500/50" 
                                                     : "text-gray-100 bg-gradient-to-br from-gray-700/50 to-gray-800/50 border-gray-500/50"
@@ -352,14 +360,14 @@ export default function CalendarView({ userData, currentUser }) {
                                         <div className="flex flex-col space-y-1">
                                             {isCurrentDay && (
                                                 <motion.div
-                                                    className="w-3 h-3 bg-gradient-to-r from-accent-400 to-accent-300 rounded-full shadow-lg"
+                                                    className="w-2 h-2 sm:w-3 sm:h-3 bg-gradient-to-r from-accent-400 to-accent-300 rounded-full shadow-lg"
                                                     animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }}
                                                     transition={{ duration: 2, repeat: Infinity }}
                                                 />
                                             )}
                                             {hasMakeupClass && (
                                                 <motion.div
-                                                    className="w-3 h-3 bg-gradient-to-r from-orange-400 to-red-400 rounded-full shadow-lg"
+                                                    className="w-2 h-2 sm:w-3 sm:h-3 bg-gradient-to-r from-orange-400 to-red-400 rounded-full shadow-lg"
                                                     animate={{ rotate: [0, 360] }}
                                                     transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                                                     title="Makeup Class Scheduled"
@@ -423,6 +431,37 @@ export default function CalendarView({ userData, currentUser }) {
                                             >
                                                 +{daySchedule.length - 2} more
                                             </motion.div>
+                                        )}
+                                    </div>
+
+                                    {/* Mobile: Simple attendance dots */}
+                                    <div className="sm:hidden absolute bottom-1 left-1 right-1 flex justify-center space-x-1">
+                                        {daySchedule.slice(0, 6).map((cls, idx) => {
+                                            const attendanceStatus = dayHistory[cls.code];
+                                            const statusInfo = getClassStatus(cls, day, dayHistory);
+                                            return (
+                                                <motion.div
+                                                    key={cls.code}
+                                                    className={cn(
+                                                        "w-1.5 h-1.5 rounded-full",
+                                                        attendanceStatus === 'attended' 
+                                                            ? "bg-green-400" :
+                                                        attendanceStatus === 'skipped' 
+                                                            ? "bg-red-400" :
+                                                        statusInfo.type === 'makeup'
+                                                            ? "bg-orange-400"
+                                                            : statusInfo.type === 'bunk'
+                                                                ? "bg-gray-400"
+                                                                : "bg-blue-400"
+                                                    )}
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    transition={{ delay: 0.1 * idx }}
+                                                />
+                                            );
+                                        })}
+                                        {daySchedule.length > 6 && (
+                                            <div className="w-1.5 h-1.5 rounded-full bg-gray-500" />
                                         )}
                                     </div>
 
