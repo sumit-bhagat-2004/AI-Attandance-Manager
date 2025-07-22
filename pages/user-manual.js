@@ -14,398 +14,255 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/router';
 
-const UserManualPage = () => {
-  const router = useRouter();
+export default function UserManual() {
+    const router = useRouter();
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
-      {/* Header */}
-      <header className="bg-gray-900/50 backdrop-blur-lg border-b border-gray-700/50 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => router.back()}
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-800/50 hover:bg-gray-700/50 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span>Back</span>
-              </motion.button>
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-lg">
-                  <BookOpen className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold">User Manual</h1>
-                  <p className="text-sm text-gray-400">Complete guide to EduTrack AI</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Content */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="prose prose-gray prose-invert max-w-none">
-          
-          {/* Introduction */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-12"
-          >
-            <div className="bg-gradient-to-r from-cyan-500/10 to-purple-600/10 rounded-2xl p-8 border border-gray-700/50">
-              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                EduTrack AI User Manual
-              </h1>
-              <p className="text-xl text-gray-300 leading-relaxed">
-                Welcome to EduTrack AI, your intelligent companion for academic success. This comprehensive guide will help you master every feature and maximize your learning potential.
-              </p>
-            </div>
-          </motion.section>
-
-          {/* Table of Contents */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="mb-12"
-          >
-            <h2 className="text-2xl font-bold mb-6 text-cyan-400">Table of Contents</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
-                <h3 className="font-semibold mb-3 text-purple-400">Getting Started</h3>
-                <ul className="space-y-2 text-sm">
-                  <li><a href="#account-setup" className="text-gray-300 hover:text-cyan-400 transition-colors">Account Setup</a></li>
-                  <li><a href="#dashboard-overview" className="text-gray-300 hover:text-cyan-400 transition-colors">Dashboard Overview</a></li>
-                  <li><a href="#navigation" className="text-gray-300 hover:text-cyan-400 transition-colors">Navigation Guide</a></li>
-                </ul>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
-                <h3 className="font-semibold mb-3 text-purple-400">Core Features</h3>
-                <ul className="space-y-2 text-sm">
-                  <li><a href="#attendance-tracking" className="text-gray-300 hover:text-cyan-400 transition-colors">Attendance Tracking</a></li>
-                  <li><a href="#schedule-management" className="text-gray-300 hover:text-cyan-400 transition-colors">Schedule Management</a></li>
-                  <li><a href="#makeup-classes" className="text-gray-300 hover:text-cyan-400 transition-colors">Makeup Classes</a></li>
-                </ul>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
-                <h3 className="font-semibold mb-3 text-purple-400">Advanced Features</h3>
-                <ul className="space-y-2 text-sm">
-                  <li><a href="#ai-reports" className="text-gray-300 hover:text-cyan-400 transition-colors">AI-Enhanced Reports</a></li>
-                  <li><a href="#eca-management" className="text-gray-300 hover:text-cyan-400 transition-colors">ECA Management</a></li>
-                  <li><a href="#analytics" className="text-gray-300 hover:text-cyan-400 transition-colors">Analytics & Stats</a></li>
-                </ul>
-              </div>
-              <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
-                <h3 className="font-semibold mb-3 text-purple-400">Tips & Troubleshooting</h3>
-                <ul className="space-y-2 text-sm">
-                  <li><a href="#best-practices" className="text-gray-300 hover:text-cyan-400 transition-colors">Best Practices</a></li>
-                  <li><a href="#troubleshooting" className="text-gray-300 hover:text-cyan-400 transition-colors">Troubleshooting</a></li>
-                  <li><a href="#faq" className="text-gray-300 hover:text-cyan-400 transition-colors">FAQ</a></li>
-                </ul>
-              </div>
-            </div>
-          </motion.section>
-
-          {/* Account Setup */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            id="account-setup"
-            className="mb-12"
-          >
-            <h2 className="text-3xl font-bold mb-6 text-cyan-400">Getting Started</h2>
-            
-            <div className="bg-gray-800/30 rounded-2xl p-6 border border-gray-700/50 mb-8">
-              <h3 className="text-xl font-semibold mb-4 text-purple-400">Account Setup</h3>
-              <div className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center text-sm font-bold">1</div>
-                  <div>
-                    <h4 className="font-semibold">Sign Up with Clerk</h4>
-                    <p className="text-gray-300">Create your account using your email or social login. Your data is securely managed by Clerk authentication.</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center text-sm font-bold">2</div>
-                  <div>
-                    <h4 className="font-semibold">Profile Setup</h4>
-                    <p className="text-gray-300">Complete your profile with your name and profile picture. This information helps personalize your experience.</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center text-sm font-bold">3</div>
-                  <div>
-                    <h4 className="font-semibold">Initial Data Import</h4>
-                    <p className="text-gray-300">Your attendance data will be automatically initialized. The system will create your personal attendance database.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-
-          {/* Dashboard Overview */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            id="dashboard-overview"
-            className="mb-12"
-          >
-            <div className="bg-gray-800/30 rounded-2xl p-6 border border-gray-700/50">
-              <h3 className="text-xl font-semibold mb-4 text-purple-400">Dashboard Overview</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <Calendar className="h-5 w-5 text-cyan-400" />
-                    <div>
-                      <h4 className="font-semibold">Schedule View</h4>
-                      <p className="text-sm text-gray-300">Daily class schedule with attendance tracking</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <BarChart3 className="h-5 w-5 text-green-400" />
-                    <div>
-                      <h4 className="font-semibold">Statistics Panel</h4>
-                      <p className="text-sm text-gray-300">Real-time attendance statistics and insights</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Bell className="h-5 w-5 text-orange-400" />
-                    <div>
-                      <h4 className="font-semibold">Makeup Alerts</h4>
-                      <p className="text-sm text-gray-300">Notifications for required makeup classes</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <User className="h-5 w-5 text-purple-400" />
-                    <div>
-                      <h4 className="font-semibold">Profile Section</h4>
-                      <p className="text-sm text-gray-300">User information and quick settings access</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Plus className="h-5 w-5 text-blue-400" />
-                    <div>
-                      <h4 className="font-semibold">Quick Actions</h4>
-                      <p className="text-sm text-gray-300">Add ECA activities and generate reports</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Settings className="h-5 w-5 text-gray-400" />
-                    <div>
-                      <h4 className="font-semibold">Time Machine</h4>
-                      <p className="text-sm text-gray-300">Navigate through different dates and semesters</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-
-          {/* Core Features */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            id="attendance-tracking"
-            className="mb-12"
-          >
-            <h2 className="text-3xl font-bold mb-6 text-cyan-400">Core Features</h2>
-            
-            <div className="bg-gray-800/30 rounded-2xl p-6 border border-gray-700/50 mb-8">
-              <h3 className="text-xl font-semibold mb-4 text-purple-400">Attendance Tracking</h3>
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-semibold mb-2">Marking Attendance</h4>
-                  <p className="text-gray-300 mb-3">Click on any class in your schedule to mark attendance:</p>
-                  <ul className="list-disc list-inside text-gray-300 space-y-1 ml-4">
-                    <li><span className="text-green-400 font-semibold">Green</span> - Present</li>
-                    <li><span className="text-red-400 font-semibold">Red</span> - Absent</li>
-                    <li><span className="text-gray-400 font-semibold">Gray</span> - Not marked</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Bulk Operations</h4>
-                  <p className="text-gray-300">Use the "Mark All Present" or "Mark All Absent" buttons for quick updates across all classes for a day.</p>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Attendance History</h4>
-                  <p className="text-gray-300">View your complete attendance history in the Calendar view, with visual indicators for each day's performance.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gray-800/30 rounded-2xl p-6 border border-gray-700/50 mb-8" id="schedule-management">
-              <h3 className="text-xl font-semibold mb-4 text-purple-400">Schedule Management</h3>
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-semibold mb-2">Daily Schedule</h4>
-                  <p className="text-gray-300">Your daily class schedule is automatically populated with all subjects including:</p>
-                  <ul className="list-disc list-inside text-gray-300 space-y-1 ml-4 mt-2">
-                    <li>Regular theory classes</li>
-                    <li>Laboratory sessions</li>
-                    <li>Training sessions</li>
-                    <li>Special events</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Weekly Overview</h4>
-                  <p className="text-gray-300">Navigate between different weeks using the date controls. The system maintains your schedule across the entire semester.</p>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-
-          {/* AI Reports */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            id="ai-reports"
-            className="mb-12"
-          >
-            <h2 className="text-3xl font-bold mb-6 text-cyan-400">Advanced Features</h2>
-            
-            <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-2xl p-6 border border-purple-500/20 mb-8">
-              <h3 className="text-xl font-semibold mb-4 text-purple-400">AI-Enhanced Reports</h3>
-              <div className="space-y-6">
-                <div>
-                  <h4 className="font-semibold mb-2">Weekly Reports Generation</h4>
-                  <p className="text-gray-300 mb-3">Click the "AI-Enhanced Weekly Reports & Study Plans" button to generate comprehensive reports that include:</p>
-                  <ul className="list-disc list-inside text-gray-300 space-y-1 ml-4">
-                    <li>Detailed attendance analysis for each subject</li>
-                    <li>Personalized study recommendations</li>
-                    <li>Attendance improvement strategies</li>
-                    <li>Motivational content and goal setting</li>
-                    <li>Resource recommendations</li>
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">AI-Powered Insights</h4>
-                  <p className="text-gray-300">Each report is enhanced with artificial intelligence to provide:</p>
-                  <ul className="list-disc list-inside text-gray-300 space-y-1 ml-4">
-                    <li>Subject-specific recovery plans</li>
-                    <li>Time management strategies</li>
-                    <li>Academic performance predictions</li>
-                    <li>Personalized motivation techniques</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </motion.section>
-
-          {/* Best Practices */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            id="best-practices"
-            className="mb-12"
-          >
-            <h2 className="text-3xl font-bold mb-6 text-cyan-400">Tips & Best Practices</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-green-500/10 rounded-2xl p-6 border border-green-500/20">
-                <h3 className="text-xl font-semibold mb-4 text-green-400">Do's</h3>
-                <ul className="space-y-3 text-gray-300">
-                  <li>✅ Mark attendance daily for accurate tracking</li>
-                  <li>✅ Review weekly reports regularly</li>
-                  <li>✅ Set up makeup classes promptly</li>
-                  <li>✅ Use the calendar view for planning</li>
-                  <li>✅ Add ECA activities to showcase achievements</li>
-                </ul>
-              </div>
-              <div className="bg-red-500/10 rounded-2xl p-6 border border-red-500/20">
-                <h3 className="text-xl font-semibold mb-4 text-red-400">Don'ts</h3>
-                <ul className="space-y-3 text-gray-300">
-                  <li>❌ Don't forget to mark attendance after classes</li>
-                  <li>❌ Don't ignore makeup class notifications</li>
-                  <li>❌ Don't rely solely on manual calculations</li>
-                  <li>❌ Don't skip reviewing AI recommendations</li>
-                  <li>❌ Don't hesitate to use the help features</li>
-                </ul>
-              </div>
-            </div>
-          </motion.section>
-
-          {/* FAQ */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-            id="faq"
-            className="mb-12"
-          >
-            <h2 className="text-3xl font-bold mb-6 text-cyan-400">Frequently Asked Questions</h2>
-            
-            <div className="space-y-4">
-              <div className="bg-gray-800/30 rounded-xl p-6 border border-gray-700/50">
-                <h4 className="font-semibold mb-2 text-purple-400">How accurate are the AI recommendations?</h4>
-                <p className="text-gray-300">The AI analyzes your attendance patterns, subject performance, and academic trends to provide personalized recommendations. While highly accurate, always consult with your academic advisors for important decisions.</p>
-              </div>
-              <div className="bg-gray-800/30 rounded-xl p-6 border border-gray-700/50">
-                <h4 className="font-semibold mb-2 text-purple-400">Can I export my data?</h4>
-                <p className="text-gray-300">Yes, you can export your attendance reports and data through the Reports section. This is useful for sharing with advisors or keeping personal records.</p>
-              </div>
-              <div className="bg-gray-800/30 rounded-xl p-6 border border-gray-700/50">
-                <h4 className="font-semibold mb-2 text-purple-400">What if I make a mistake in marking attendance?</h4>
-                <p className="text-gray-300">You can easily correct attendance by clicking on the class again and selecting the correct status. The system maintains a history of changes for accuracy.</p>
-              </div>
-              <div className="bg-gray-800/30 rounded-xl p-6 border border-gray-700/50">
-                <h4 className="font-semibold mb-2 text-purple-400">How do makeup classes work?</h4>
-                <p className="text-gray-300">When you miss classes, the system automatically suggests makeup opportunities. You can schedule and track makeup classes to maintain your attendance requirements.</p>
-              </div>
-            </div>
-          </motion.section>
-
-          {/* Support */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.8 }}
-            className="mb-12"
-          >
-            <div className="bg-gradient-to-r from-cyan-500/10 to-purple-600/10 rounded-2xl p-8 border border-gray-700/50 text-center">
-              <h2 className="text-2xl font-bold mb-4 text-cyan-400">Need Additional Help?</h2>
-              <p className="text-gray-300 mb-6">
-                If you need further assistance, check out our Quick Reference guide or contact our support team.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => router.push('/quick-reference')}
-                  className="flex items-center justify-center space-x-2 px-6 py-3 bg-cyan-600 hover:bg-cyan-700 rounded-lg font-semibold transition-colors"
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white">
+            <div className="container mx-auto px-4 py-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                    className="max-w-4xl mx-auto"
                 >
-                  <Eye className="h-4 w-4" />
-                  <span>Quick Reference</span>
-                </motion.button>
-                <motion.a
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  href="mailto:support@edutrack-ai.com"
-                  className="flex items-center justify-center space-x-2 px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-colors"
-                >
-                  <Download className="h-4 w-4" />
-                  <span>Contact Support</span>
-                </motion.a>
-              </div>
+                    {/* Header */}
+                    <div className="text-center mb-12">
+                        <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">
+                            EduTrack AI User Manual
+                        </h1>
+                        <p className="text-gray-400 text-lg">
+                            Complete guide to managing your attendance with AI-powered insights
+                        </p>
+                    </div>
+
+                    {/* Content */}
+                    <div className="space-y-12">
+                        
+                        {/* Getting Started Section */}
+                        <section className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700">
+                            <h2 className="text-3xl font-bold mb-6 text-cyan-400">Getting Started</h2>
+                            
+                            <div className="space-y-6">
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-3 text-white">1. Setting Up Your Cycle Start Date</h3>
+                                    <div className="bg-gray-700/50 rounded-lg p-4 mb-4">
+                                        <p className="text-gray-300 mb-3">
+                                            The cycle start date determines when your attendance tracking begins and is crucial for accurate percentage calculations.
+                                        </p>
+                                        <div className="space-y-2 text-sm">
+                                            <p className="text-cyan-400 font-medium">📅 How to set your cycle start date:</p>
+                                            <ul className="list-disc list-inside text-gray-300 space-y-1 ml-4">
+                                                <li><strong>Desktop:</strong> Click the "Cycle Start" button in the top navigation bar</li>
+                                                <li><strong>Mobile:</strong> Open the hamburger menu (☰) and tap "Set Cycle Start Date"</li>
+                                                <li><strong>Choose the date:</strong> Select the first day of your academic semester/term</li>
+                                                <li><strong>Confirm:</strong> Click "Set Cycle Start Date" to save</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-4">
+                                        <p className="text-amber-300 text-sm">
+                                            <strong>Important:</strong> Set this to the actual first day of your academic semester. This affects all attendance percentage calculations and week-based features like makeup class scheduling.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-3 text-white">2. Initial Setup</h3>
+                                    <p className="text-gray-300 mb-4">
+                                        After logging in with your institutional account, EduTrack AI will automatically initialize your attendance tracking system.
+                                    </p>
+                                    <ul className="list-disc list-inside text-gray-300 space-y-2">
+                                        <li>Your dashboard will display today's class schedule</li>
+                                        <li>All subjects will show 0% attendance initially</li>
+                                        <li>The system tracks 14 subjects: 7 regular classes, 3 lab sessions, and 4 training modules</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Core Features Section */}
+                        <section className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700">
+                            <h2 className="text-3xl font-bold mb-6 text-cyan-400">Core Features</h2>
+                            
+                            <div className="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4 text-white">📊 Attendance Tracking</h3>
+                                    <div className="space-y-3 text-gray-300">
+                                        <p><strong>Mark Present:</strong> Click the green checkmark (✓) on any class card</p>
+                                        <p><strong>Mark Absent:</strong> Click the red X mark (✗) on any class card</p>
+                                        <p><strong>Bulk Actions:</strong> Use "Mark All Present" or "Mark All Absent" buttons</p>
+                                        <p><strong>Time Travel:</strong> Use date controls to mark attendance for past or future dates</p>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4 text-white">📈 Smart Analytics</h3>
+                                    <div className="space-y-3 text-gray-300">
+                                        <p><strong>Real-time Percentages:</strong> See attendance percentages update instantly</p>
+                                        <p><strong>Subject Breakdown:</strong> Individual percentage for each subject</p>
+                                        <p><strong>Risk Assessment:</strong> Subjects below 80% are flagged as "at risk"</p>
+                                        <p><strong>Weekly Trends:</strong> Track your attendance patterns over time</p>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4 text-white">🎯 Makeup Classes</h3>
+                                    <div className="space-y-3 text-gray-300">
+                                        <p><strong>Automatic Detection:</strong> System alerts when makeup is needed</p>
+                                        <p><strong>Smart Scheduling:</strong> Browse available makeup slots</p>
+                                        <p><strong>Progress Tracking:</strong> Monitor makeup class completion</p>
+                                        <p><strong>Multiple Makeups:</strong> Handle multiple subjects requiring makeup</p>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4 text-white">🏆 ECA Management</h3>
+                                    <div className="space-y-3 text-gray-300">
+                                        <p><strong>Activity Logging:</strong> Record extracurricular activities</p>
+                                        <p><strong>Bonus Credits:</strong> ECA activities boost attendance percentages</p>
+                                        <p><strong>Achievement Tracking:</strong> Monitor participation levels</p>
+                                        <p><strong>Calendar Integration:</strong> View ECA activities in calendar view</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Advanced Features Section */}
+                        <section className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700">
+                            <h2 className="text-3xl font-bold mb-6 text-cyan-400">Advanced Features</h2>
+                            
+                            <div className="space-y-8">
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4 text-white">🤖 AI-Enhanced Weekly Reports</h3>
+                                    <p className="text-gray-300 mb-4">
+                                        Generate comprehensive weekly reports with AI-powered insights and recommendations.
+                                    </p>
+                                    <div className="bg-gray-700/50 rounded-lg p-4">
+                                        <h4 className="text-cyan-400 font-medium mb-2">Report Features:</h4>
+                                        <ul className="list-disc list-inside text-gray-300 space-y-1">
+                                            <li>Detailed attendance breakdown by subject</li>
+                                            <li>AI-generated study recommendations</li>
+                                            <li>Risk assessment and recovery strategies</li>
+                                            <li>Personalized academic advice</li>
+                                            <li>Weekly progress comparison</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4 text-white">⚡ App Updates</h3>
+                                    <p className="text-gray-300 mb-4">
+                                        EduTrack AI automatically checks for updates to ensure you always have the latest features and improvements.
+                                    </p>
+                                    <div className="bg-gray-700/50 rounded-lg p-4">
+                                        <h4 className="text-cyan-400 font-medium mb-2">Update Process:</h4>
+                                        <ul className="list-disc list-inside text-gray-300 space-y-1">
+                                            <li><strong>Automatic Detection:</strong> App checks for updates every 10 minutes</li>
+                                            <li><strong>Manual Updates:</strong> Click "Update App" button in footer anytime</li>
+                                            <li><strong>Notification:</strong> Orange "New version available!" alert when updates are ready</li>
+                                            <li><strong>Safe Updates:</strong> Your data and login session are preserved during updates</li>
+                                            <li><strong>Latest Version:</strong> Currently running version 1.0.5</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4 text-white">📱 Progressive Web App (PWA)</h3>
+                                    <p className="text-gray-300 mb-4">
+                                        Install EduTrack AI as a native app on your device for the best experience.
+                                    </p>
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div className="bg-gray-700/50 rounded-lg p-4">
+                                            <h4 className="text-cyan-400 font-medium mb-2">Installation Benefits:</h4>
+                                            <ul className="list-disc list-inside text-gray-300 space-y-1 text-sm">
+                                                <li>Native app-like experience</li>
+                                                <li>Faster loading times</li>
+                                                <li>Offline functionality</li>
+                                                <li>Home screen access</li>
+                                                <li>Push notifications (future)</li>
+                                            </ul>
+                                        </div>
+                                        <div className="bg-gray-700/50 rounded-lg p-4">
+                                            <h4 className="text-cyan-400 font-medium mb-2">How to Install:</h4>
+                                            <ul className="list-disc list-inside text-gray-300 space-y-1 text-sm">
+                                                <li><strong>Desktop:</strong> Click "Install App" button</li>
+                                                <li><strong>Mobile:</strong> Use "Add to Home Screen" option</li>
+                                                <li><strong>Chrome:</strong> Look for install prompt in address bar</li>
+                                                <li><strong>Safari:</strong> Share menu → "Add to Home Screen"</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Troubleshooting Section */}
+                        <section className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700">
+                            <h2 className="text-3xl font-bold mb-6 text-cyan-400">Troubleshooting & Support</h2>
+                            
+                            <div className="space-y-6">
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4 text-white">Common Issues</h3>
+                                    <div className="space-y-4">
+                                        <div className="bg-gray-700/50 rounded-lg p-4">
+                                            <h4 className="text-amber-400 font-medium mb-2">Percentages showing as 100% or incorrect values</h4>
+                                            <p className="text-gray-300 text-sm mb-2">
+                                                This usually happens when the cycle start date is not properly set.
+                                            </p>
+                                            <p className="text-cyan-400 text-sm">
+                                                <strong>Solution:</strong> Go to navigation menu → "Cycle Start" and set the correct semester start date.
+                                            </p>
+                                        </div>
+                                        
+                                        <div className="bg-gray-700/50 rounded-lg p-4">
+                                            <h4 className="text-amber-400 font-medium mb-2">App not updating or showing old data</h4>
+                                            <p className="text-gray-300 text-sm mb-2">
+                                                Cache issues or pending app updates.
+                                            </p>
+                                            <p className="text-cyan-400 text-sm">
+                                                <strong>Solution:</strong> Click "Update App" in footer, or refresh with Ctrl+Shift+R (hard refresh).
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-4 text-white">Getting Help</h3>
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div className="space-y-3">
+                                            <h4 className="text-cyan-400 font-medium">In-App Help</h4>
+                                            <ul className="list-disc list-inside text-gray-300 space-y-1 text-sm">
+                                                <li>Help Center (footer)</li>
+                                                <li>Quick Reference guide</li>
+                                                <li>This User Manual</li>
+                                            </ul>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <h4 className="text-cyan-400 font-medium">Contact Support</h4>
+                                            <ul className="list-disc list-inside text-gray-300 space-y-1 text-sm">
+                                                <li>Email: sumitbhagat2004@gmail.com</li>
+                                                <li>GitHub Issues</li>
+                                                <li>Feedback form (coming soon)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        {/* Navigation */}
+                        <div className="flex justify-center">
+                            <Link 
+                                href="/dashboard"
+                                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium rounded-xl hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+                            >
+                                ← Back to Dashboard
+                            </Link>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
-          </motion.section>
-
         </div>
-      </main>
-    </div>
-  );
-};
-
-export default UserManualPage;
+    );
+}
