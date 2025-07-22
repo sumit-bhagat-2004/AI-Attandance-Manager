@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeftIcon, ChevronRightIcon, CalendarDaysIcon } from '@heroicons/react/24/outline';
-import { fullSchedule, subjects, bunkSchedule, mandatorySchedule, isMandatoryClass } from '../lib/scheduleData';
+import { fullSchedule, subjects, bunkSchedule, mandatorySchedule, isMandatoryClass, getEffectiveCycleStartDate } from '../lib/scheduleData';
 import { cn, getAttendanceStatusColor, formatDateToLocalString } from '../lib/utils';
 import DayDetailsModal from './DayDetailsModal';
 
@@ -28,8 +28,8 @@ export default function CalendarView({ userData, currentUser }) {
         });
     }
 
-    // Calculate week in cycle for determining recommended bunks
-    const cycleStartDate = new Date(userData.cycleStartDate);
+    // Calculate week in cycle for determining recommended bunks using effective cycle start
+    const cycleStartDate = getEffectiveCycleStartDate(userData);
     const getCurrentWeekInCycle = (date) => {
         const diffTime = Math.abs(date - cycleStartDate);
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));

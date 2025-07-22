@@ -123,15 +123,17 @@ export default async function handler(req, res) {
                 const updateField = `history.${dateStr}.${classCode}`;
                 
                 // Check if we need to adjust the cycle start date based on attendance history
+                // Only adjust if user hasn't manually set their cycle start date
                 const attendanceDate = new Date(dateStr);
                 const currentCycleStart = new Date(userData.cycleStartDate);
                 let needsCycleAdjustment = false;
                 let newCycleStartDate = null;
                 
-                if (attendanceDate < currentCycleStart) {
+                // Only auto-adjust cycle start if user hasn't manually set it
+                if (!userData.userSetCycleStart && attendanceDate < currentCycleStart) {
                     needsCycleAdjustment = true;
                     newCycleStartDate = attendanceDate.toISOString();
-                    console.log(`Adjusting cycle start date from ${userData.cycleStartDate} to ${newCycleStartDate} for user ${user}`);
+                    console.log(`Auto-adjusting cycle start date from ${userData.cycleStartDate} to ${newCycleStartDate} for user ${user}`);
                 }
                 
                 // Handle removing attendance records
@@ -362,7 +364,7 @@ export default async function handler(req, res) {
                 
                 // Check bunk schedule for available optional classes
                 const today = new Date();
-                const currentWeek = getWeekInCycle(new Date(userData.cycleStartDate), today);
+                const currentWeek = getWeekInCycle(getEffectiveCycleStartDate(userData), today);
                 const availableOptionalClasses = [];
                 
                 // Look ahead 4 weeks for optional classes
@@ -431,6 +433,30 @@ export default async function handler(req, res) {
                     { username: user },
                     { $set: { makeup: userData.makeup, makeups: userData.makeups } }
                 );
+                
+            } else if (action === 'setCycleStart') {
+                const { cycleStartDate } = payload;
+                
+                // Validate the date
+                const newStartDate = new Date(cycleStartDate);
+                if (isNaN(newStartDate.getTime())) {
+                    return res.status(400).json({ message: "Invalid cycle start date provided." });
+                }
+                
+                // Update the cycle start date in database
+                await collection.updateOne(
+                    { username: user },
+                    { 
+                        $set: { 
+                            cycleStartDate: newStartDate.toISOString(),
+                            // Reset any automatic cycle adjustments
+                            lastCycleAdjustment: new Date().toISOString(),
+                            userSetCycleStart: true // Flag to indicate user manually set this
+                        } 
+                    }
+                );
+                
+                console.log(`User ${user} set cycle start date to: ${newStartDate.toISOString()}`);
                 
             } else {
                 return res.status(400).json({ message: "Invalid action." });

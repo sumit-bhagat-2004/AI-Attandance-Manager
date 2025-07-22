@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, CalendarDaysIcon, ClockIcon, CheckCircleIcon, XCircleIcon, MinusCircleIcon, BookOpenIcon, UserGroupIcon } from '@heroicons/react/24/outline';
-import { subjects, fullSchedule, bunkSchedule, mandatorySchedule, isMandatoryClass } from '../lib/scheduleData';
+import { subjects, fullSchedule, bunkSchedule, mandatorySchedule, isMandatoryClass, getEffectiveCycleStartDate } from '../lib/scheduleData';
 import { cn, formatDateToLocalString } from '../lib/utils';
 import StudyMaterialsModal from './StudyMaterialsModal';
 
@@ -192,10 +192,10 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
     const dayHistory = userData.history[dayStr] || {};
     const isToday = selectedDate.toDateString() === new Date().toDateString();
 
-    // Calculate week in cycle for determining class types
-    const cycleStartDate = new Date(userData.cycleStartDate);
+    // Calculate week in cycle for determining class types using effective cycle start
+    const effectiveCycleStart = getEffectiveCycleStartDate(userData);
     const getCurrentWeekInCycle = (date) => {
-        const diffTime = Math.abs(date - cycleStartDate);
+        const diffTime = Math.abs(date - effectiveCycleStart);
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         return (Math.floor(diffDays / 7) % 5) + 1;
     };

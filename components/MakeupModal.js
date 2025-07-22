@@ -7,14 +7,14 @@ import {
     ClockIcon,
     ExclamationTriangleIcon 
 } from '@heroicons/react/24/outline';
-import { fullSchedule, bunkSchedule, mandatorySchedule, subjects } from '../lib/scheduleData';
+import { fullSchedule, bunkSchedule, mandatorySchedule, subjects, getEffectiveCycleStartDate } from '../lib/scheduleData';
 import { cn, formatDateToLocalString } from '../lib/utils';
 
 export default function MakeupModal({ userData, onSelect, onClose, selectedSubject }) {
     const getFutureBunks = useCallback(() => {
         const bunks = [];
         const today = new Date();
-        const cycleStartDate = new Date(userData.cycleStartDate);
+        const cycleStartDate = getEffectiveCycleStartDate(userData);
         const missedSubject = selectedSubject || userData.makeup?.subjectToMakeup; // The subject that was missed
 
         // Look ahead for the next 10 weeks (70 days) to find makeup opportunities
@@ -53,7 +53,7 @@ export default function MakeupModal({ userData, onSelect, onClose, selectedSubje
         
         // Sort by date and return next 10 options
         return bunks.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 10);
-    }, [userData.cycleStartDate, selectedSubject, userData.makeup?.subjectToMakeup]);
+    }, [userData, selectedSubject]);
 
     const futureBunks = getFutureBunks();
 

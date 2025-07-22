@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useClerk } from '@clerk/nextjs';
+import toast from 'react-hot-toast';
 import { 
     UserIcon, 
     CalendarDaysIcon, 
@@ -25,6 +26,7 @@ import GeminiResultModal from './GeminiResultModal';
 import MakeupModal from './MakeupModal';
 import ECAManagerModal from './ECAManagerModal';
 import ReportManagerModal from './ReportManagerModal';
+import CycleStartModal from './CycleStartModal';
 import PWAInstallPrompt from './PWAInstallPrompt';
 import Footer from './Footer';
 import { cn, formatDate } from '../lib/utils';
@@ -123,6 +125,7 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
     const [showReportModal, setShowReportModal] = useState(false);
     const [weeklyReports, setWeeklyReports] = useState([]);
     const [isGeneratingReports, setIsGeneratingReports] = useState(false);
+    const [showCycleStartModal, setShowCycleStartModal] = useState(false);
 
     // Debug: Log the current user
     console.log('🏠 Dashboard user:', currentUser);
@@ -169,6 +172,26 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
         fetchData();
     }, [currentUser]);
 
+    // Check if user needs to set cycle start date
+    useEffect(() => {
+        if (userData && !loading) {
+            // Show cycle start modal if user hasn't manually set their cycle start date
+            const hasNotSetCycleStart = !userData.userSetCycleStart;
+            
+            if (hasNotSetCycleStart) {
+                console.log('User needs to set cycle start date:', {
+                    userSetCycleStart: userData.userSetCycleStart,
+                    cycleStartDate: userData.cycleStartDate,
+                    hasHistory: !!(userData.history && Object.keys(userData.history).length > 0)
+                });
+                // Show modal after a brief delay to ensure UI is ready
+                setTimeout(() => {
+                    setShowCycleStartModal(true);
+                }, 1000);
+            }
+        }
+    }, [userData, loading]);
+
     // Trigger confetti for achievements
     useEffect(() => {
         if (userData && !loading) {
@@ -188,6 +211,41 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
 
     const updateUserData = (newUserData) => {
         setUserData(newUserData);
+    };
+
+    const handleSetCycleStart = async (cycleStartDate) => {
+        try {
+            const response = await fetch('/api/data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'setCycleStart', 
+                    payload: { 
+                        user: currentUser,
+                        cycleStartDate 
+                    } 
+                }),
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to set cycle start date');
+            }
+            
+            // Refetch user data to get updated cycle start date
+            await fetchUserData();
+            
+            toast.success('Cycle start date updated successfully! 📅', {
+                duration: 4000,
+                style: {
+                    background: 'rgba(34, 197, 94, 0.1)',
+                    border: '1px solid rgba(34, 197, 94, 0.3)',
+                    color: 'rgb(34, 197, 94)',
+                }
+            });
+        } catch (error) {
+            console.error('Error setting cycle start date:', error);
+            toast.error(`Failed to update cycle start date: ${error.message}`);
+        }
     };
 
     const handleMakeupSelection = async (targetClass, makeupInfo = null) => {
@@ -1146,6 +1204,18 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                             </motion.div>
                         )}
                         
+                        {/* Cycle Start Settings Button */}
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setShowCycleStartModal(true)}
+                            className="flex items-center px-3 py-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-blue-400 hover:text-blue-300 rounded-xl font-medium transition-all duration-200"
+                            title="Set Cycle Start Date"
+                        >
+                            <CalendarDaysIcon className="h-4 w-4" />
+                            <span className="ml-2 hidden xl:block">Cycle Start</span>
+                        </motion.button>
+                        
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -1307,6 +1377,20 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                                     <p className="text-xs text-gray-400 mb-2 text-center">🕰️ Time Machine</p>
                                     <DateControlPanel />
                                 </div>
+                                
+                                {/* Cycle Start Settings */}
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => {
+                                        setShowCycleStartModal(true);
+                                        setIsMobileMenuOpen(false);
+                                    }}
+                                    className="w-full flex items-center justify-center px-4 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-blue-400 hover:text-blue-300 rounded-lg font-medium transition-all duration-200 mb-3"
+                                >
+                                    <CalendarDaysIcon className="h-4 w-4 mr-2" />
+                                    Set Cycle Start Date
+                                </motion.button>
                                 
                                 {/* Logout Button */}
                                 <motion.button
@@ -1530,6 +1614,14 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                 onViewReport={handleViewReport}
                 onGenerateReport={generateAndSaveWeeklyReports}
                 isGenerating={isGeneratingReports}
+            />
+
+            {/* Cycle Start Modal */}
+            <CycleStartModal
+                isOpen={showCycleStartModal}
+                onClose={() => setShowCycleStartModal(false)}
+                onConfirm={handleSetCycleStart}
+                currentCycleStart={userData?.cycleStartDate}
             />
 
             {/* Confetti Celebration */}
