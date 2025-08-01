@@ -22,7 +22,7 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
         return () => clearInterval(interval);
     }, []);
 
-    const handleToggleAttendance = async (classCode, status) => {
+    const handleToggleAttendance = async (classCode, status, classTime) => {
         const dateStr = formatDateToLocalString(today);
         const todayStr = formatDateToLocalString(new Date());
         const isPastDate = dateStr < todayStr;
@@ -85,6 +85,7 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
             classCode, 
             status, 
             dateStr,
+            classTime, // Include class time for unique attendance tracking
             isMakeupClass // Pass this flag to the API
         };
         
@@ -336,16 +337,32 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
     const permanentBunks = bunkSchedule['permanent']?.[dayOfWeek] || [];
     const dailyBunks = [...weeklyBunks, ...permanentBunks];
     
-    const getAttendanceStatus = (classCode) => {
+    const getAttendanceStatus = (classCode, classTime) => {
         const dateStr = formatDateToLocalString(today);
         
         // Check if subject was changed for this class on this date
         const changeKey = `${dateStr}-${classCode}`;
-        const effectiveClassCode = userData?.subjectChanges?.[changeKey] ? 
-            userData.subjectChanges[changeKey].newSubject : 
-            classCode;
-            
-        return userData.history[dateStr]?.[effectiveClassCode] || null;
+        const change = userData?.subjectChanges?.[changeKey];
+        
+        // Create attendance keys with time for multiple classes per day
+        const timeBasedKey = classTime ? `${classCode}-${classTime}` : classCode;
+        const timeBasedNewKey = change && classTime ? `${change.newSubject}-${classTime}` : change?.newSubject;
+        
+        if (change) {
+            // For changed subjects, check multiple possible keys for backward compatibility:
+            // 1. New subject with time (current format)
+            // 2. New subject without time (legacy format)
+            // 3. Original subject with time (fallback)
+            // 4. Original subject without time (legacy fallback)
+            return userData.history[dateStr]?.[timeBasedNewKey] || 
+                   userData.history[dateStr]?.[change.newSubject] ||
+                   userData.history[dateStr]?.[timeBasedKey] ||
+                   userData.history[dateStr]?.[classCode] || null;
+        }
+        
+        // For regular classes, check both time-based and legacy keys
+        return userData.history[dateStr]?.[timeBasedKey] || 
+               userData.history[dateStr]?.[classCode] || null;
     };
     
     const isRecommendedBunk = (classCode) => {
@@ -514,7 +531,7 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
                     <AnimatePresence mode="popLayout">
                         {todaysClasses.map((classInfo, index) => {
                             const isPast = isClassInPast(classInfo.time, today);
-                            const attendanceStatus = getAttendanceStatus(classInfo.code, today);
+                            const attendanceStatus = getAttendanceStatus(classInfo.code, classInfo.time);
                             const isRecommendedBunkClass = isRecommendedBunk(classInfo.code);
                             const isMakeupTargetClass = isMakeupTarget(classInfo.code, classInfo.time);
                             

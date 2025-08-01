@@ -301,19 +301,31 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
     };
 
     // Helper function to get correct attendance status considering subject changes
-    const getEffectiveAttendanceStatus = (classCode, date, dayHistory) => {
+    const getEffectiveAttendanceStatus = (classCode, date, dayHistory, classTime) => {
         const dateStr = formatDateToLocalString(date);
         const changeKey = `${dateStr}-${classCode}`;
+        
+        // Create attendance keys with time for multiple classes per day
+        const timeBasedKey = classTime ? `${classCode}-${classTime}` : classCode;
         
         // Check if subject was changed for this class on this date
         if (userData?.subjectChanges?.[changeKey]) {
             const change = userData.subjectChanges[changeKey];
-            // Check attendance under the new subject code first, then fallback to original
-            return dayHistory[change.newSubject] || dayHistory[classCode];
+            const timeBasedNewKey = classTime ? `${change.newSubject}-${classTime}` : change.newSubject;
+            
+            // Check multiple keys for backward compatibility:
+            // 1. New subject with time (current format)
+            // 2. New subject without time (legacy format)  
+            // 3. Original subject with time (fallback)
+            // 4. Original subject without time (legacy fallback)
+            return dayHistory[timeBasedNewKey] || 
+                   dayHistory[change.newSubject] || 
+                   dayHistory[timeBasedKey] || 
+                   dayHistory[classCode];
         }
         
-        // No subject change, check under original class code
-        return dayHistory[classCode];
+        // No subject change, check both time-based and legacy keys for backward compatibility
+        return dayHistory[timeBasedKey] || dayHistory[classCode];
     };
 
     // Check if this day has any makeup classes
@@ -344,10 +356,10 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
 
     // Calculate attendance counts considering subject changes
     const attendedCount = daySchedule.filter(cls => 
-        getEffectiveAttendanceStatus(cls.code, selectedDate, dayHistory) === 'attended'
+        getEffectiveAttendanceStatus(cls.code, selectedDate, dayHistory, cls.time) === 'attended'
     ).length;
     const skippedCount = daySchedule.filter(cls => 
-        getEffectiveAttendanceStatus(cls.code, selectedDate, dayHistory) === 'skipped'
+        getEffectiveAttendanceStatus(cls.code, selectedDate, dayHistory, cls.time) === 'skipped'
     ).length;
     const totalClasses = daySchedule.length;
 
@@ -489,7 +501,7 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
                                     {daySchedule.map((cls, index) => {
                                         const subject = subjects[cls.code];
                                         const effectiveSubject = getEffectiveSubjectDisplay(cls.code, selectedDate);
-                                        const attendanceStatus = getEffectiveAttendanceStatus(cls.code, selectedDate, dayHistory);
+                                        const attendanceStatus = getEffectiveAttendanceStatus(cls.code, selectedDate, dayHistory, cls.time);
                                         const statusInfo = getClassStatus(cls, selectedDate, dayHistory);
                                         
                                         return (

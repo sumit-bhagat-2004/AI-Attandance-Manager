@@ -61,19 +61,31 @@ export default function CalendarView({ userData, currentUser }) {
     };
 
     // Helper function to get correct attendance status considering subject changes
-    const getEffectiveAttendanceStatus = (classCode, date, dayHistory) => {
+    const getEffectiveAttendanceStatus = (classCode, date, dayHistory, classTime) => {
         const dateStr = formatDateToLocalString(date);
         const changeKey = `${dateStr}-${classCode}`;
+        
+        // Create attendance keys with time for multiple classes per day
+        const timeBasedKey = classTime ? `${classCode}-${classTime}` : classCode;
         
         // Check if subject was changed for this class on this date
         if (userData?.subjectChanges?.[changeKey]) {
             const change = userData.subjectChanges[changeKey];
-            // Check attendance under the new subject code first, then fallback to original
-            return dayHistory[change.newSubject] || dayHistory[classCode];
+            const timeBasedNewKey = classTime ? `${change.newSubject}-${classTime}` : change.newSubject;
+            
+            // Check multiple keys for backward compatibility:
+            // 1. New subject with time (current format)
+            // 2. New subject without time (legacy format)  
+            // 3. Original subject with time (fallback)
+            // 4. Original subject without time (legacy fallback)
+            return dayHistory[timeBasedNewKey] || 
+                   dayHistory[change.newSubject] || 
+                   dayHistory[timeBasedKey] || 
+                   dayHistory[classCode];
         }
         
-        // No subject change, check under original class code
-        return dayHistory[classCode];
+        // No subject change, check both time-based and legacy keys for backward compatibility
+        return dayHistory[timeBasedKey] || dayHistory[classCode];
     };
 
     // Helper functions matching ScheduleView logic EXACTLY
@@ -344,10 +356,10 @@ export default function CalendarView({ userData, currentUser }) {
                             
                             // Calculate attendance counts considering subject changes
                             const attendedClasses = daySchedule.filter(cls => 
-                                getEffectiveAttendanceStatus(cls.code, day, dayHistory) === 'attended'
+                                getEffectiveAttendanceStatus(cls.code, day, dayHistory, cls.time) === 'attended'
                             ).length;
                             const skippedClasses = daySchedule.filter(cls => 
-                                getEffectiveAttendanceStatus(cls.code, day, dayHistory) === 'skipped'
+                                getEffectiveAttendanceStatus(cls.code, day, dayHistory, cls.time) === 'skipped'
                             ).length;
                             
                             // Check for makeup classes using the same logic as ClassCard
@@ -426,7 +438,7 @@ export default function CalendarView({ userData, currentUser }) {
                                     <div className="relative space-y-1 flex-1">
                                         {/* Show classes with their status */}
                                         {classStatusInfo.slice(0, 2).map((cls, clsIndex) => {
-                                            const attendanceStatus = getEffectiveAttendanceStatus(cls.code, day, dayHistory);
+                                            const attendanceStatus = getEffectiveAttendanceStatus(cls.code, day, dayHistory, cls.time);
                                             const statusInfo = cls.status;
                                             const effectiveSubject = getEffectiveSubjectDisplay(cls.code, day);
                                             
@@ -489,7 +501,7 @@ export default function CalendarView({ userData, currentUser }) {
                                     {/* Mobile: Simple attendance dots */}
                                     <div className="sm:hidden absolute bottom-1 left-1 right-1 flex justify-center space-x-1">
                                         {daySchedule.slice(0, 6).map((cls, idx) => {
-                                            const attendanceStatus = getEffectiveAttendanceStatus(cls.code, day, dayHistory);
+                                            const attendanceStatus = getEffectiveAttendanceStatus(cls.code, day, dayHistory, cls.time);
                                             const statusInfo = getClassStatus(cls, day, dayHistory);
                                             return (
                                                 <motion.div

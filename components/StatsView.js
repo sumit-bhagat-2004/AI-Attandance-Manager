@@ -71,13 +71,31 @@ export default function StatsView({ userData }) {
         
         return Object.keys(subjects)
             .map(code => {
-                // Count actual attendance from history (already recorded under correct subject codes)
+                // Count actual attendance from history (both legacy and time-based keys)
                 const attendedCount = Object.values(userData.history || {}).reduce((acc, day) => {
-                    return acc + (day[code] === 'attended' ? 1 : 0);
+                    let count = 0;
+                    // Check legacy format (just subject code)
+                    if (day[code] === 'attended') count++;
+                    // Check time-based format (subject-time)
+                    Object.keys(day).forEach(key => {
+                        if (key.startsWith(`${code}-`) && day[key] === 'attended') {
+                            count++;
+                        }
+                    });
+                    return acc + count;
                 }, 0);
 
                 const skippedCount = Object.values(userData.history || {}).reduce((acc, day) => {
-                    return acc + (day[code] === 'skipped' ? 1 : 0);
+                    let count = 0;
+                    // Check legacy format (just subject code)
+                    if (day[code] === 'skipped') count++;
+                    // Check time-based format (subject-time)
+                    Object.keys(day).forEach(key => {
+                        if (key.startsWith(`${code}-`) && day[key] === 'skipped') {
+                            count++;
+                        }
+                    });
+                    return acc + count;
                 }, 0);
 
                 // Use adjusted total that accounts for subject changes

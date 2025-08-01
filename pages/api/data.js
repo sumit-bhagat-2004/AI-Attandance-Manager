@@ -111,7 +111,7 @@ export default async function handler(req, res) {
             let needsMakeup = false;
 
             if (action === 'logAttendance') {
-                const { classCode, status, dateStr } = payload;
+                const { classCode, status, dateStr, classTime } = payload;
                 const checkDate = new Date(dateStr);
                 const dayOfWeek = checkDate.getDay();
                 
@@ -133,7 +133,10 @@ export default async function handler(req, res) {
                 // A class is mandatory if it's in the mandatorySchedule or is a designated makeup
                 const isMandatory = isClassMandatory || isDesignatedMakeup;
                 
-                const updateField = `history.${dateStr}.${classCode}`;
+                // Create unique attendance key: include time if available for multiple classes per day
+                // Format: "classCode" or "classCode-time" for backward compatibility
+                const attendanceKey = classTime ? `${classCode}-${classTime}` : classCode;
+                const updateField = `history.${dateStr}.${attendanceKey}`;
                 
                 // Check if we need to adjust the cycle start date based on attendance history
                 // Only adjust if user hasn't manually set their cycle start date

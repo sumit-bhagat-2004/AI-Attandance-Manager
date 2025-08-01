@@ -117,11 +117,11 @@ export default function ClassCard({
     }, [isPast, isMakeupTarget, isRecommendedBunk, attendanceStatus]);
 
     const handleAttendClick = () => {
-        onToggleAttendance(effectiveSubjectCode, 'attended');
+        onToggleAttendance(effectiveSubjectCode, 'attended', classInfo.time);
     };
 
     const handleSkipClick = () => {
-        onToggleAttendance(effectiveSubjectCode, 'skipped');
+        onToggleAttendance(effectiveSubjectCode, 'skipped', classInfo.time);
     };
 
     const handleAITopicsClick = () => {
@@ -503,7 +503,7 @@ export default function ClassCard({
                             {/* Remove Attendance Button - Show for any recorded attendance */}
                             {(attendanceStatus === 'attended' || attendanceStatus === 'skipped' || attendanceStatus === 'present' || attendanceStatus === 'absent' || attendanceStatus === 'late') && (
                                 <motion.button
-                                    onClick={() => onToggleAttendance(effectiveSubjectCode, 'unrecorded')}
+                                    onClick={() => onToggleAttendance(effectiveSubjectCode, 'unrecorded', classInfo.time)}
                                     className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-gradient-to-r from-orange-600/40 to-red-600/40 hover:from-orange-600/60 hover:to-red-600/60 border border-orange-400/60 text-orange-200 hover:text-orange-100 shadow-md text-xs font-semibold transition-all duration-200"
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
