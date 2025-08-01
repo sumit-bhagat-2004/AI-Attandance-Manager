@@ -152,13 +152,26 @@ export default async function handler(req, res) {
                     console.log(`Auto-adjusting cycle start date from ${userData.cycleStartDate} to ${newCycleStartDate} for user ${user}`);
                 }
                 
-                // Handle removing attendance records
+                // Handle removing attendance records - support both old and new formats
                 if (status === 'unrecorded') {
-                    // Remove the attendance record
-                    await collection.updateOne(
-                        { username: user },
-                        { $unset: { [updateField]: "" } }
-                    );
+                    const dayHistory = userData.history[dateStr] || {};
+                    const unsetFields = {};
+                    
+                    // Check which format(s) exist and remove them
+                    if (dayHistory[attendanceKey]) {
+                        unsetFields[updateField] = "";
+                    }
+                    // Also check legacy format (just classCode) if different from attendanceKey
+                    if (attendanceKey !== classCode && dayHistory[classCode]) {
+                        unsetFields[`history.${dateStr}.${classCode}`] = "";
+                    }
+                    
+                    if (Object.keys(unsetFields).length > 0) {
+                        await collection.updateOne(
+                            { username: user },
+                            { $unset: unsetFields }
+                        );
+                    }
                     
                     // If there was a makeup requirement for this class on this date, remove it
                     if (userData.makeups) {
