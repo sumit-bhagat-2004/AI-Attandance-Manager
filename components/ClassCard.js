@@ -20,18 +20,48 @@ export default function ClassCard({
     onToggleAttendance,
     weekInCycle,
     onGetClassTopics,
-    currentUser
+    currentUser,
+    onSubjectChange,
+    userData
 }) {
     const [showAIModal, setShowAIModal] = useState(false);
     const [isLoadingAI, setIsLoadingAI] = useState(false);
+    const [showSubjectChange, setShowSubjectChange] = useState(false);
     
-    // Get subject info
+    // Get subject info with subject change handling
     const subject = subjects[classInfo.code];
-    const subjectName = subject?.name || classInfo.code;
+    
+    // Check for subject changes on this date
+    const getDisplaySubject = () => {
+        const classDate = dayDate ? new Date(dayDate) : new Date();
+        const dateStr = classDate.toISOString().split('T')[0];
+        const changeKey = `${dateStr}-${classInfo.code}`;
+        
+        // Check if subject was changed for this class on this date
+        if (userData?.subjectChanges?.[changeKey]) {
+            const change = userData.subjectChanges[changeKey];
+            const newSubject = subjects[change.newSubject];
+            return {
+                ...newSubject,
+                isChanged: true,
+                originalSubject: subject?.name || classInfo.code,
+                changeReason: change.reason,
+                newSubjectCode: change.newSubject // Store the new subject code
+            };
+        }
+        
+        return { ...subject, isChanged: false };
+    };
+    
+    const displaySubject = getDisplaySubject();
+    const subjectName = displaySubject?.name || classInfo.code;
+
+    // Get the effective subject code (changed subject or original)
+    const effectiveSubjectCode = displaySubject.isChanged ? displaySubject.newSubjectCode : classInfo.code;
 
     // Determine if this class is mandatory (for 80% attendance requirement)
     const classDate = dayDate ? new Date(dayDate) : new Date();
-    const isMandatoryFor80Percent = isMandatoryClass(weekInCycle, classDate.getDay(), classInfo.code) || isMakeupTarget;
+    const isMandatoryFor80Percent = isMandatoryClass(weekInCycle, classDate.getDay(), effectiveSubjectCode) || isMakeupTarget;
 
     // Determine card styling based on type with inline styles for guaranteed colors
     const cardStyles = useMemo(() => {
@@ -87,15 +117,22 @@ export default function ClassCard({
     }, [isPast, isMakeupTarget, isRecommendedBunk, attendanceStatus]);
 
     const handleAttendClick = () => {
-        onToggleAttendance(classInfo.code, 'attended');
+        onToggleAttendance(effectiveSubjectCode, 'attended');
     };
 
     const handleSkipClick = () => {
-        onToggleAttendance(classInfo.code, 'skipped');
+        onToggleAttendance(effectiveSubjectCode, 'skipped');
     };
 
     const handleAITopicsClick = () => {
         setShowAIModal(true);
+    };
+
+    const handleSubjectChange = (newSubjectCode) => {
+        if (onSubjectChange) {
+            onSubjectChange(classInfo.code, newSubjectCode, dayDate);
+        }
+        setShowSubjectChange(false);
     };
 
     const handleGenerateTopics = async (classCode, hint) => {
@@ -198,9 +235,21 @@ export default function ClassCard({
                             <AcademicCapIcon className="w-6 h-6" />
                         </div>
                         <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-base text-white leading-tight mb-1">
-                                {subjectName}
-                            </h3>
+                            <div className="flex items-center space-x-2 mb-1">
+                                <h3 className="font-bold text-base text-white leading-tight">
+                                    {subjectName}
+                                </h3>
+                                {displaySubject.isChanged && (
+                                    <span className="px-2 py-1 text-xs bg-orange-500/20 text-orange-300 rounded-full border border-orange-500/30">
+                                        Changed
+                                    </span>
+                                )}
+                            </div>
+                            {displaySubject.isChanged && (
+                                <div className="text-xs text-gray-400 mb-1">
+                                    <span className="text-gray-500">Originally:</span> <span className="line-through">{displaySubject.originalSubject}</span>
+                                </div>
+                            )}
                             <div className="flex items-center gap-2 text-xs text-gray-400">
                                 <span className="font-mono">{classInfo.code}</span>
                                 {weekInCycle && (
@@ -242,25 +291,67 @@ export default function ClassCard({
                     </div>
                 </div>
 
-                {/* Time and AI Topics Row */}
-                <div className="flex items-center justify-between gap-3">
+                {/* Time and Action Buttons Row */}
+                <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                         <ClockIcon className="w-4 h-4 text-gray-400" />
                         <span className="text-sm font-medium text-gray-300">{classInfo.time}</span>
                     </div>
-                    {/* AI Topics Button */}
-                    {onGetClassTopics && !isPast && (
-                        <motion.button
-                            onClick={handleAITopicsClick}
-                            className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 border border-purple-400 text-white shadow-md text-xs font-semibold transition-all duration-200 flex items-center gap-2"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            <span>🤖</span>
-                            <span>AI Topics</span>
-                        </motion.button>
-                    )}
+                    <div className="flex items-center gap-2">
+                        {/* Subject Change Button - For teacher absence */}
+                        {!isPast && onSubjectChange && (
+                            <motion.button
+                                onClick={() => setShowSubjectChange(!showSubjectChange)}
+                                className="px-2 py-1 rounded-lg bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 border border-orange-400 text-white shadow-md text-xs font-semibold transition-all duration-200"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                title="Change subject due to teacher absence"
+                            >
+                                📚
+                            </motion.button>
+                        )}
+                        
+                        {/* AI Topics Button */}
+                        {onGetClassTopics && !isPast && (
+                            <motion.button
+                                onClick={handleAITopicsClick}
+                                className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 border border-purple-400 text-white shadow-md text-xs font-semibold transition-all duration-200 flex items-center gap-2"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <span>🤖</span>
+                                <span>AI Topics</span>
+                            </motion.button>
+                        )}
+                    </div>
                 </div>
+
+                {/* Subject Change Dropdown */}
+                {showSubjectChange && !isPast && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="bg-gray-800/50 border border-gray-600 rounded-lg p-3 space-y-2"
+                    >
+                        <p className="text-xs text-gray-300 mb-2">Select replacement subject:</p>
+                        <div className="grid grid-cols-2 gap-2">
+                            {Object.entries(subjects).map(([code, subject]) => (
+                                code !== classInfo.code && (
+                                    <motion.button
+                                        key={code}
+                                        onClick={() => handleSubjectChange(code)}
+                                        className="px-2 py-1 bg-gray-700 hover:bg-gray-600 border border-gray-500 rounded text-xs text-white transition-all duration-200"
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        {subject.name}
+                                    </motion.button>
+                                )
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* Special indicators - Clean */}
                 {isMakeupTarget && (
@@ -295,22 +386,22 @@ export default function ClassCard({
                                 </div>
                             )}
                             
-                            {/* Mandatory classes - Show both Attend and Skip */}
-                            {isMandatoryFor80Percent && (
+                            {/* Makeup classes - Both buttons (highest priority) */}
+                            {isMakeupTarget ? (
                                 <div className="grid grid-cols-2 gap-2">
                                     <motion.button
                                         onClick={handleAttendClick}
-                                        className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 border border-emerald-400 text-white shadow-md text-xs font-semibold transition-all duration-200"
+                                        className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 border border-emerald-300 text-white shadow-md text-xs font-semibold transition-all duration-200"
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                     >
                                         <CheckIcon className="w-4 h-4" />
-                                        <span>Attend</span>
+                                        <span>Complete</span>
                                     </motion.button>
                                     
                                     <motion.button
                                         onClick={handleSkipClick}
-                                        className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 border border-red-400 text-white shadow-md text-xs font-semibold transition-all duration-200"
+                                        className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 border border-orange-400 text-white shadow-md text-xs font-semibold transition-all duration-200"
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                     >
@@ -318,10 +409,8 @@ export default function ClassCard({
                                         <span>Skip</span>
                                     </motion.button>
                                 </div>
-                            )}
-                            
-                            {/* Recommended bunks - Smart buttons */}
-                            {isRecommendedBunk && !isMakeupTarget && (
+                            ) : isRecommendedBunk ? (
+                                /* Recommended bunks - Smart buttons */
                                 <>
                                     {isPast && (!attendanceStatus || attendanceStatus === 'unrecorded') ? (
                                         <div className="grid grid-cols-2 gap-2">
@@ -356,24 +445,36 @@ export default function ClassCard({
                                         </motion.button>
                                     )}
                                 </>
-                            )}
-                            
-                            {/* Makeup classes - Both buttons */}
-                            {isMakeupTarget && (
+                            ) : (
+                                /* Default: All other classes (including mandatory and changed subjects) - Show both Attend and Skip */
                                 <div className="grid grid-cols-2 gap-2">
                                     <motion.button
                                         onClick={handleAttendClick}
-                                        className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 border border-emerald-300 text-white shadow-md text-xs font-semibold transition-all duration-200"
+                                        className={cn(
+                                            "flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-white shadow-md text-xs font-semibold transition-all duration-200",
+                                            displaySubject.isChanged 
+                                                ? "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border border-purple-400"
+                                                : isMandatoryFor80Percent
+                                                    ? "bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 border border-emerald-400"
+                                                    : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border border-blue-400"
+                                        )}
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                     >
                                         <CheckIcon className="w-4 h-4" />
-                                        <span>Complete</span>
+                                        <span>Attend</span>
                                     </motion.button>
                                     
                                     <motion.button
                                         onClick={handleSkipClick}
-                                        className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 border border-orange-400 text-white shadow-md text-xs font-semibold transition-all duration-200"
+                                        className={cn(
+                                            "flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-white shadow-md text-xs font-semibold transition-all duration-200",
+                                            displaySubject.isChanged 
+                                                ? "bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 border border-orange-400"
+                                                : isMandatoryFor80Percent
+                                                    ? "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 border border-red-400"
+                                                    : "bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 border border-gray-400"
+                                        )}
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                     >
@@ -402,7 +503,7 @@ export default function ClassCard({
                             {/* Remove Attendance Button - Show for any recorded attendance */}
                             {(attendanceStatus === 'attended' || attendanceStatus === 'skipped' || attendanceStatus === 'present' || attendanceStatus === 'absent' || attendanceStatus === 'late') && (
                                 <motion.button
-                                    onClick={() => onToggleAttendance(classInfo.code, 'unrecorded')}
+                                    onClick={() => onToggleAttendance(effectiveSubjectCode, 'unrecorded')}
                                     className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-gradient-to-r from-orange-600/40 to-red-600/40 hover:from-orange-600/60 hover:to-red-600/60 border border-orange-400/60 text-orange-200 hover:text-orange-100 shadow-md text-xs font-semibold transition-all duration-200"
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
@@ -421,7 +522,7 @@ export default function ClassCard({
             <AITopicsModal
                 isOpen={showAIModal}
                 onClose={() => setShowAIModal(false)}
-                classCode={classInfo.code}
+                classCode={effectiveSubjectCode}
                 subjectName={subjectName}
                 onGenerateTopics={handleGenerateTopics}
                 onStoreHint={currentUser ? handleStoreHint : null}

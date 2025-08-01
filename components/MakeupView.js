@@ -12,7 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import MakeupModal from './MakeupModal';
 
-export default function MakeupView({ userData, subjects = {}, onMakeupSelect }) {
+export default function MakeupView({ userData, subjects = {}, onMakeupSelect, onRescheduleMakeup, onRemoveMakeup, currentUser }) {
     const [showMakeupModal, setShowMakeupModal] = useState(false);
     const [selectedMakeupIndex, setSelectedMakeupIndex] = useState(0);
     
@@ -258,10 +258,37 @@ export default function MakeupView({ userData, subjects = {}, onMakeupSelect }) 
                                 </div>
                                 
                                 {hasSelectedMakeup && (
-                                    <div className="mt-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-                                        <p className="text-xs text-green-300 text-center font-medium">
-                                            ✅ Your makeup class is now marked as mandatory. Make sure to attend!
-                                        </p>
+                                    <div className="mt-4 space-y-3">
+                                        {/* Success Message */}
+                                        <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                                            <p className="text-xs text-green-300 text-center font-medium">
+                                                ✅ Your makeup class is now marked as mandatory. Make sure to attend!
+                                            </p>
+                                        </div>
+                                        
+                                        {/* Action Buttons */}
+                                        <div className="flex items-center justify-center space-x-3">
+                                            <motion.button
+                                                onClick={() => onRescheduleMakeup && onRescheduleMakeup(makeup.subjectToMakeup, index)}
+                                                className="flex items-center space-x-2 px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-300 rounded-lg font-medium transition-all duration-200 text-sm"
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                title="Reschedule makeup class"
+                                            >
+                                                <ClockIcon className="w-4 h-4" />
+                                                <span>Reschedule</span>
+                                            </motion.button>
+                                            <motion.button
+                                                onClick={() => onRemoveMakeup && onRemoveMakeup(makeup.subjectToMakeup, index)}
+                                                className="flex items-center space-x-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 rounded-lg font-medium transition-all duration-200 text-sm"
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                title="Remove makeup class"
+                                            >
+                                                <span>✕</span>
+                                                <span>Remove</span>
+                                            </motion.button>
+                                        </div>
                                     </div>
                                 )}
                             </motion.div>
@@ -432,6 +459,7 @@ export default function MakeupView({ userData, subjects = {}, onMakeupSelect }) 
                         onSelect={handleMakeupSelection} 
                         onClose={() => setShowMakeupModal(false)}
                         selectedSubject={makeups[selectedMakeupIndex]?.subjectToMakeup}
+                        currentUser={currentUser}
                     />
                 )}
             </AnimatePresence>

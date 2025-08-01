@@ -264,6 +264,64 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
         }
     };
     
+    // Handle subject change due to teacher absence
+    const handleSubjectChange = async (classCode, newSubject, classDate) => {
+        try {
+            const response = await fetch('/api/data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'changeSubject',
+                    payload: {
+                        user: currentUser,
+                        originalSubject: classCode,
+                        newSubject,
+                        date: formatDateToLocalString(classDate),
+                        reason: 'Teacher absence'
+                    }
+                }),
+            });
+            
+            const data = await response.json();
+            if (response.ok) {
+                updateUserData(data.updatedData);
+                toast.success(`Subject changed to ${subjects[newSubject]?.name}`, {
+                    icon: "📚",
+                    style: {
+                        borderRadius: '10px',
+                        background: '#1f2937',
+                        color: '#f3f4f6',
+                        border: '1px solid #10b981'
+                    }
+                });
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            console.error('Failed to change subject:', error);
+            
+            // Handle specific error cases
+            let errorMessage = 'Unknown error occurred';
+            if (error.message.includes('MongoDB connection error')) {
+                errorMessage = 'Database connection failed. Using local mode.';
+            } else if (error.message.includes('Failed to fetch')) {
+                errorMessage = 'Network error. Check your connection.';
+            } else {
+                errorMessage = error.message;
+            }
+            
+            toast.error(`Failed to change subject: ${errorMessage}`, {
+                icon: "❌",
+                style: {
+                    borderRadius: '10px',
+                    background: '#1f2937',
+                    color: '#f3f4f6',
+                    border: '1px solid #ef4444'
+                }
+            });
+        }
+    };
+    
     const dayOfWeek = today.getDay();
     const todaysClasses = fullSchedule[dayOfWeek] || [];
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -280,7 +338,14 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
     
     const getAttendanceStatus = (classCode) => {
         const dateStr = formatDateToLocalString(today);
-        return userData.history[dateStr]?.[classCode] || null;
+        
+        // Check if subject was changed for this class on this date
+        const changeKey = `${dateStr}-${classCode}`;
+        const effectiveClassCode = userData?.subjectChanges?.[changeKey] ? 
+            userData.subjectChanges[changeKey].newSubject : 
+            classCode;
+            
+        return userData.history[dateStr]?.[effectiveClassCode] || null;
     };
     
     const isRecommendedBunk = (classCode) => {
@@ -475,6 +540,8 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
                                         weekInCycle={weekInCycle}
                                         onGetClassTopics={handleGetClassTopics}
                                         currentUser={currentUser}
+                                        onSubjectChange={handleSubjectChange}
+                                        userData={userData}
                                     />
                                 </motion.div>
                             );
@@ -515,7 +582,8 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
                     <MakeupModal 
                         userData={userData} 
                         onSelect={handleMakeupSelection} 
-                        onClose={() => setShowMakeupModal(false)} 
+                        onClose={() => setShowMakeupModal(false)}
+                        currentUser={user}
                     />
                 )}
             </AnimatePresence>

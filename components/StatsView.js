@@ -13,27 +13,74 @@ import {
     CheckCircleIcon,
     XCircleIcon
 } from '@heroicons/react/24/outline';
-import { subjects, calculateTotalClassesHeld, getEffectiveCycleStartDate } from '../lib/scheduleData';
+import { subjects, calculateTotalClassesHeld, getEffectiveCycleStartDate, fullSchedule } from '../lib/scheduleData';
 import { calculateSubjectAttendance, cn } from '../lib/utils';
 
 export default function StatsView({ userData }) {
+    // Helper function to calculate total classes held considering subject changes
+    const calculateAdjustedTotalClassesHeld = (subjectCode) => {
+        const effectiveStartDate = getEffectiveCycleStartDate(userData);
+        let count = 0;
+        let adjustments = 0;
+        
+        // Get base count from schedule
+        let currentDate = new Date(effectiveStartDate);
+        const today = new Date();
+        
+        while (currentDate <= today) {
+            const dayOfWeek = currentDate.getDay();
+            const dateStr = currentDate.toISOString().split('T')[0];
+            
+            if (fullSchedule[dayOfWeek]) {
+                for (const cls of fullSchedule[dayOfWeek]) {
+                    if (cls.code === subjectCode) {
+                        // Check if this class was changed on this date
+                        const changeKey = `${dateStr}-${subjectCode}`;
+                        const wasChanged = userData?.subjectChanges?.[changeKey];
+                        
+                        if (wasChanged) {
+                            // This subject was changed to another, so don't count it for this subject
+                            // (it will be counted for the new subject)
+                        } else {
+                            count++;
+                        }
+                    } else {
+                        // Check if another subject was changed TO this subject on this date
+                        const changedToThis = userData?.subjectChanges && Object.entries(userData.subjectChanges).find(([key, change]) => 
+                            key.startsWith(dateStr) && change.newSubject === subjectCode
+                        );
+                        
+                        if (changedToThis) {
+                            // Another subject was changed to this subject, so count it
+                            count++;
+                        }
+                    }
+                }
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        return count;
+    };
+
     // Calculate detailed statistics for ALL subjects (including labs and training)
     const getSubjectStats = () => {
         const effectiveStartDate = getEffectiveCycleStartDate(userData);
         
         return Object.keys(subjects)
             .map(code => {
-                const attendedCount = Object.values(userData.history).reduce((acc, day) => {
+                // Count actual attendance from history (already recorded under correct subject codes)
+                const attendedCount = Object.values(userData.history || {}).reduce((acc, day) => {
                     return acc + (day[code] === 'attended' ? 1 : 0);
                 }, 0);
 
-                const skippedCount = Object.values(userData.history).reduce((acc, day) => {
+                const skippedCount = Object.values(userData.history || {}).reduce((acc, day) => {
                     return acc + (day[code] === 'skipped' ? 1 : 0);
                 }, 0);
 
-                const totalHeld = calculateTotalClassesHeld(code, effectiveStartDate, new Date());
-                const percentage = calculateSubjectAttendance ? calculateSubjectAttendance(userData, code) : 
-                    (totalHeld === 0 ? 100 : Math.round((attendedCount / totalHeld) * 100));
+                // Use adjusted total that accounts for subject changes
+                const totalHeld = calculateAdjustedTotalClassesHeld(code);
+                const percentage = totalHeld === 0 ? 100 : Math.round((attendedCount / totalHeld) * 100);
 
                 // Determine subject type
                 const isLab = code.startsWith('LAB');

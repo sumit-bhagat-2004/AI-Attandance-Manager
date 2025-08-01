@@ -36,6 +36,30 @@ export default function CalendarView({ userData, currentUser }) {
         return (Math.floor(diffDays / 7) % 5) + 1;
     };
 
+    // Helper function to get effective subject display considering subject changes
+    const getEffectiveSubjectDisplay = (classCode, date) => {
+        const dateStr = formatDateToLocalString(date);
+        const changeKey = `${dateStr}-${classCode}`;
+        
+        // Check if subject was changed for this class on this date
+        if (userData?.subjectChanges?.[changeKey]) {
+            const change = userData.subjectChanges[changeKey];
+            const newSubject = subjects[change.newSubject];
+            return {
+                code: change.newSubject,
+                name: newSubject?.name || change.newSubject,
+                isChanged: true,
+                originalName: subjects[classCode]?.name || classCode
+            };
+        }
+        
+        return {
+            code: classCode,
+            name: subjects[classCode]?.name || classCode,
+            isChanged: false
+        };
+    };
+
     // Helper functions matching ScheduleView logic EXACTLY
     const isRecommendedBunk = (classCode, date) => {
         const dayOfWeek = date.getDay();
@@ -382,6 +406,7 @@ export default function CalendarView({ userData, currentUser }) {
                                         {classStatusInfo.slice(0, 2).map((cls, clsIndex) => {
                                             const attendanceStatus = dayHistory[cls.code];
                                             const statusInfo = cls.status;
+                                            const effectiveSubject = getEffectiveSubjectDisplay(cls.code, date);
                                             
                                             return (
                                                 <motion.div 
@@ -400,15 +425,20 @@ export default function CalendarView({ userData, currentUser }) {
                                                                 ? "bg-slate-500/30 text-slate-200 border-slate-400/40"
                                                                 : "bg-blue-500/30 text-blue-200 border-blue-400/40"
                                                     )}
-                                                    title={`${subjects[cls.code]?.name} - ${attendanceStatus ? (attendanceStatus === 'attended' ? 'Attended' : 'Missed') : statusInfo.status}`}
+                                                    title={`${effectiveSubject.name}${effectiveSubject.isChanged ? ` (Changed from ${effectiveSubject.originalName})` : ''} - ${attendanceStatus ? (attendanceStatus === 'attended' ? 'Attended' : 'Missed') : statusInfo.status}`}
                                                     initial={{ opacity: 0, x: -10 }}
                                                     animate={{ opacity: 1, x: 0 }}
                                                     transition={{ delay: 0.1 * clsIndex }}
                                                     whileHover={{ scale: 1.05, x: 2 }}
                                                 >
                                                     <div className="flex items-center justify-between">
-                                                        <span className="truncate flex-1">
-                                                            {subjects[cls.code]?.name?.slice(0, 6) || cls.code}
+                                                        <span className="truncate flex-1 flex items-center">
+                                                            <span className={effectiveSubject.isChanged ? "text-yellow-300" : ""}>
+                                                                {effectiveSubject.name?.slice(0, 6) || effectiveSubject.code}
+                                                            </span>
+                                                            {effectiveSubject.isChanged && (
+                                                                <span className="ml-1 text-yellow-400 text-xs">⚡</span>
+                                                            )}
                                                         </span>
                                                         <span className="ml-1 font-bold">
                                                             {attendanceStatus === 'attended' ? '✓' :

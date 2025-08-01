@@ -130,6 +130,26 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
     // Debug: Log the current user
     console.log('🏠 Dashboard user:', currentUser);
 
+    // Helper function for consistent error handling
+    const handleApiError = (error, defaultMessage = "An error occurred. Please try again.") => {
+        const isOfflineMode = error.message && error.message.includes('MongoDB connection error');
+        const errorMessage = isOfflineMode 
+            ? "System is currently in offline mode. Some features may be limited. Please try again later."
+            : error.message || defaultMessage;
+            
+        toast.error(errorMessage, {
+            icon: isOfflineMode ? "🔄" : "❌",
+            style: {
+                borderRadius: '10px',
+                background: '#1f2937',
+                color: '#f3f4f6',
+                border: '1px solid #ef4444'
+            }
+        });
+        
+        return errorMessage;
+    };
+
     // Handle logout with Clerk
     const handleLogout = async () => {
         try {
@@ -250,6 +270,42 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
 
     const handleMakeupSelection = async (targetClass, makeupInfo = null) => {
         try {
+            // Handle refresh case (when targetClass is null, just refresh data)
+            if (targetClass === null) {
+                // Refresh user data without showing error
+                await fetchData();
+                return;
+            }
+
+            // Validate targetClass before proceeding
+            if (!targetClass || typeof targetClass !== 'object') {
+                toast.error("Invalid class selection. Please try again.", {
+                    icon: "❌",
+                    style: {
+                        borderRadius: '10px',
+                        background: '#1f2937',
+                        color: '#f3f4f6',
+                        border: '1px solid #374151'
+                    }
+                });
+                console.error("handleMakeupSelection: Invalid targetClass:", targetClass);
+                return;
+            }
+
+            if (!targetClass.code || !targetClass.date || !targetClass.time) {
+                toast.error("Incomplete class data. Please refresh and try again.", {
+                    icon: "❌",
+                    style: {
+                        borderRadius: '10px',
+                        background: '#1f2937',
+                        color: '#f3f4f6',
+                        border: '1px solid #374151'
+                    }
+                });
+                console.error("handleMakeupSelection: Missing required properties:", targetClass);
+                return;
+            }
+
             // Use provided makeupInfo or fall back to current state
             const subjectToMakeup = makeupInfo?.subject || selectedMakeupSubject || userData.makeup?.subjectToMakeup;
             const makeupIndex = makeupInfo?.index !== undefined ? makeupInfo.index : selectedMakeupIndex;
@@ -273,15 +329,26 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                 setShowMakeupModal(false);
                 setSelectedMakeupSubject(null);
                 setSelectedMakeupIndex(0);
+                
+                toast.success("Makeup class scheduled successfully!", {
+                    icon: "✅",
+                    style: {
+                        borderRadius: '10px',
+                        background: '#1f2937',
+                        color: '#f3f4f6',
+                        border: '1px solid #374151'
+                    }
+                });
             } else {
                 throw new Error(data.message);
             }
         } catch (error) {
             console.error("Failed to set makeup class:", error);
+            handleApiError(error, "Failed to schedule makeup class. Please try again.");
         }
     };
 
-    // Handle makeup class rescheduling - only if more optional classes available and no pending makeups
+    // Handle makeup class rescheduling - enhanced to show comprehensive options
     const handleRescheduleMakeup = async (subjectToMakeup, makeupIndex) => {
         try {
             // Check if rescheduling is allowed
@@ -289,38 +356,168 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
             const pendingMakeups = currentMakeups.filter(m => !m.makeupTarget);
             
             if (pendingMakeups.length > 1) {
-                alert("Please complete all pending makeup selections before rescheduling.");
+                toast.error("Please complete all pending makeup selections before rescheduling.", {
+                    icon: "⚠️",
+                    style: {
+                        borderRadius: '10px',
+                        background: '#1f2937',
+                        color: '#f3f4f6',
+                        border: '1px solid #374151'
+                    }
+                });
                 return;
             }
 
-            // Check if more optional classes are available
-            const response = await fetch('/api/data', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'checkOptionalClasses',
-                    payload: { user: currentUser, subjectToMakeup }
-                }),
-            });
-            
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.message);
+            // Check for both future optional classes and available past credits
+            let futureData = { hasMoreOptionalClasses: false, availableClasses: [] };
+            let pastData = { availablePastClasses: [] };
+            let hasErrors = false;
+            let errorMessages = [];
+
+            try {
+                const [futureResponse, pastResponse] = await Promise.all([
+                    fetch('/api/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'checkOptionalClasses',
+                            payload: { user: currentUser, subjectToMakeup }
+                        }),
+                    }),
+                    fetch('/api/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'getAvailablePastClasses',
+                            payload: { user: currentUser, subjectToMakeup }
+                        }),
+                    })
+                ]);
+                
+                const [futureResponseData, pastResponseData] = await Promise.all([
+                    futureResponse.json(),
+                    pastResponse.json()
+                ]);
+                
+                // Handle future classes response
+                if (futureResponse.ok) {
+                    futureData = futureResponseData;
+                } else {
+                    hasErrors = true;
+                    errorMessages.push(`Future classes: ${futureResponseData.message}`);
+                    console.warn('Failed to fetch future classes:', futureResponseData.message);
+                }
+                
+                // Handle past credits response
+                if (pastResponse.ok) {
+                    pastData = pastResponseData;
+                } else {
+                    hasErrors = true;
+                    errorMessages.push(`Past credits: ${pastResponseData.message}`);
+                    console.warn('Failed to fetch past credits:', pastResponseData.message);
+                }
+                
+            } catch (networkError) {
+                hasErrors = true;
+                errorMessages.push('Network connection failed');
+                console.error('Network error during API calls:', networkError);
             }
 
-            if (!data.hasMoreOptionalClasses) {
-                alert("No more optional classes available for rescheduling. All available slots are occupied.");
-                return;
+            // Show warning if there were errors but still try to proceed
+            if (hasErrors) {
+                const isOfflineMode = errorMessages.some(msg => msg.includes('MongoDB connection error'));
+                if (isOfflineMode) {
+                    toast.warning("System is in offline mode. Makeup options may be limited.", {
+                        icon: "🔄",
+                        style: {
+                            borderRadius: '10px',
+                            background: '#1f2937',
+                            color: '#f3f4f6',
+                            border: '1px solid #f59e0b'
+                        }
+                    });
+                }
             }
 
-            // Open makeup modal for rescheduling
+            // Check if any options are available
+            const hasFutureClasses = futureData.hasMoreOptionalClasses;
+            const hasPastCredits = pastData.availablePastClasses && pastData.availablePastClasses.length > 0;
+
+            if (!hasFutureClasses && !hasPastCredits) {
+                // If no options found and there were errors, show different message
+                const message = hasErrors 
+                    ? "Unable to load makeup options due to connection issues. The makeup modal will still open for manual selection."
+                    : "No makeup options available. No future slots or past credits found for this subject.";
+                    
+                if (hasErrors) {
+                    toast.warning(message, {
+                        icon: "⚠️",
+                        style: {
+                            borderRadius: '10px',
+                            background: '#1f2937',
+                            color: '#f3f4f6',
+                            border: '1px solid #f59e0b'
+                        }
+                    });
+                } else {
+                    toast.error(message, {
+                        icon: "❌",
+                        style: {
+                            borderRadius: '10px',
+                            background: '#1f2937',
+                            color: '#f3f4f6',
+                            border: '1px solid #374151'
+                        }
+                    });
+                }
+                
+                // If there were errors, still open the modal; otherwise return early
+                if (!hasErrors) {
+                    return;
+                }
+            }
+
+            // Show available options in toast
+            if (hasFutureClasses && hasPastCredits) {
+                toast.success(`Found ${futureData.availableClasses?.length || 0} future slots and ${pastData.availablePastClasses.length} past credits available!`, {
+                    icon: "✅",
+                    style: {
+                        borderRadius: '10px',
+                        background: '#1f2937',
+                        color: '#f3f4f6',
+                        border: '1px solid #10b981'
+                    }
+                });
+            } else if (hasFutureClasses) {
+                toast.success(`Found ${futureData.availableClasses?.length || 0} future makeup slots available!`, {
+                    icon: "📅",
+                    style: {
+                        borderRadius: '10px',
+                        background: '#1f2937',
+                        color: '#f3f4f6',
+                        border: '1px solid #3b82f6'
+                    }
+                });
+            } else if (hasPastCredits) {
+                toast.success(`Found ${pastData.availablePastClasses.length} past credits available!`, {
+                    icon: "🎯",
+                    style: {
+                        borderRadius: '10px',
+                        background: '#1f2937',
+                        color: '#f3f4f6',
+                        border: '1px solid #8b5cf6'
+                    }
+                });
+            }
+
+            // Open makeup modal for rescheduling with enhanced options
             setSelectedMakeupSubject(subjectToMakeup);
             setSelectedMakeupIndex(makeupIndex);
             setShowMakeupModal(true);
             
         } catch (error) {
             console.error("Failed to reschedule makeup:", error);
-            alert("Error rescheduling makeup class. Please try again.");
+            handleApiError(error, "Error checking available makeup options. Please try again.");
         }
     };
 
@@ -349,12 +546,21 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
             const data = await response.json();
             if (response.ok) {
                 updateUserData(data.updatedData);
+                toast.success("Makeup class removed successfully!", {
+                    icon: "✅",
+                    style: {
+                        borderRadius: '10px',
+                        background: '#1f2937',
+                        color: '#f3f4f6',
+                        border: '1px solid #374151'
+                    }
+                });
             } else {
                 throw new Error(data.message);
             }
         } catch (error) {
             console.error("Failed to remove makeup:", error);
-            alert("Error removing makeup class. Please try again.");
+            handleApiError(error, "Error removing makeup class. Please try again.");
         }
     };
 
@@ -1497,6 +1703,9 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                                         userData={userData}
                                         subjects={subjects}
                                         onMakeupSelect={handleMakeupSelection}
+                                        onRescheduleMakeup={handleRescheduleMakeup}
+                                        onRemoveMakeup={handleRemoveMakeup}
+                                        currentUser={currentUser}
                                     />
                                 ) : view === 'calendar' ? (
                                     <CalendarView userData={userData} currentUser={currentUser} />
@@ -1589,7 +1798,8 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                             setSelectedMakeupSubject(null);
                             setSelectedMakeupIndex(0);
                         }}
-                        selectedSubject={selectedMakeupSubject} 
+                        selectedSubject={selectedMakeupSubject}
+                        currentUser={currentUser}
                     />
                 )}
             </AnimatePresence>

@@ -1,10 +1,52 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Target, Award, AlertTriangle, Star } from 'lucide-react';
-import { subjects, calculateTotalClassesHeld, getEffectiveCycleStartDate } from '../lib/scheduleData';
-import { getAttendanceColor, getAttendanceTextColor, calculateSubjectAttendance, cn } from '../lib/utils';
+import { subjects, calculateTotalClassesHeld, getEffectiveCycleStartDate, fullSchedule } from '../lib/scheduleData';
+import { getAttendanceColor, getAttendanceTextColor, calculateSubjectAttendance, cn, formatDateToLocalString } from '../lib/utils';
 
 export default function StatsPanel({ userData }) {
+    // Helper function to calculate total classes held considering subject changes
+    const calculateAdjustedTotalClassesHeld = (subjectCode) => {
+        const effectiveStartDate = getEffectiveCycleStartDate(userData);
+        let count = 0;
+        
+        let currentDate = new Date(effectiveStartDate);
+        const today = new Date();
+        
+        while (currentDate <= today) {
+            const dayOfWeek = currentDate.getDay();
+            const dateStr = formatDateToLocalString(currentDate);
+            
+            if (fullSchedule[dayOfWeek]) {
+                for (const cls of fullSchedule[dayOfWeek]) {
+                    if (cls.code === subjectCode) {
+                        // Check if this class was changed on this date
+                        const changeKey = `${dateStr}-${subjectCode}`;
+                        const wasChanged = userData?.subjectChanges?.[changeKey];
+                        
+                        if (!wasChanged) {
+                            // This subject was not changed, so count it
+                            count++;
+                        }
+                    } else {
+                        // Check if another subject was changed TO this subject on this date
+                        const changedToThis = userData?.subjectChanges && Object.entries(userData.subjectChanges).find(([key, change]) => 
+                            key.startsWith(dateStr) && change.newSubject === subjectCode
+                        );
+                        
+                        if (changedToThis) {
+                            // Another subject was changed to this subject, so count it
+                            count++;
+                        }
+                    }
+                }
+            }
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+        
+        return count;
+    };
+
     const getPercentage = (code) => {
         return calculateSubjectAttendance ? calculateSubjectAttendance(userData, code) : 0;
     };
@@ -14,7 +56,7 @@ export default function StatsPanel({ userData }) {
         const attendedCount = Object.values(userData.history || {}).reduce((acc, day) => {
             return acc + (day[code] === 'attended' ? 1 : 0);
         }, 0);
-        const totalHeld = calculateTotalClassesHeld(code, effectiveStartDate, new Date());
+        const totalHeld = calculateAdjustedTotalClassesHeld(code);
         const percentage = getPercentage(code);
         
         return {
