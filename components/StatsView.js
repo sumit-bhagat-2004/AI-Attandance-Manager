@@ -14,14 +14,13 @@ import {
     XCircleIcon
 } from '@heroicons/react/24/outline';
 import { subjects, calculateTotalClassesHeld, getEffectiveCycleStartDate, fullSchedule } from '../lib/scheduleData';
-import { calculateSubjectAttendance, cn } from '../lib/utils';
+import { calculateSubjectAttendance, cn, formatDateToLocalString } from '../lib/utils';
 
 export default function StatsView({ userData }) {
     // Helper function to calculate total classes held considering subject changes
     const calculateAdjustedTotalClassesHeld = (subjectCode) => {
         const effectiveStartDate = getEffectiveCycleStartDate(userData);
         let count = 0;
-        let adjustments = 0;
         
         // Get base count from schedule
         let currentDate = new Date(effectiveStartDate);
@@ -29,33 +28,36 @@ export default function StatsView({ userData }) {
         
         while (currentDate <= today) {
             const dayOfWeek = currentDate.getDay();
-            const dateStr = currentDate.toISOString().split('T')[0];
+            const dateStr = formatDateToLocalString(currentDate);
             
             if (fullSchedule[dayOfWeek]) {
-                for (const cls of fullSchedule[dayOfWeek]) {
+                // Count classes for this subject on this day
+                let classesForThisSubjectToday = 0;
+                
+                // First, count how many times this subject appears in the original schedule
+                fullSchedule[dayOfWeek].forEach(cls => {
                     if (cls.code === subjectCode) {
-                        // Check if this class was changed on this date
-                        const changeKey = `${dateStr}-${subjectCode}`;
-                        const wasChanged = userData?.subjectChanges?.[changeKey];
-                        
-                        if (wasChanged) {
-                            // This subject was changed to another, so don't count it for this subject
-                            // (it will be counted for the new subject)
-                        } else {
-                            count++;
-                        }
-                    } else {
-                        // Check if another subject was changed TO this subject on this date
-                        const changedToThis = userData?.subjectChanges && Object.entries(userData.subjectChanges).find(([key, change]) => 
-                            key.startsWith(dateStr) && change.newSubject === subjectCode
-                        );
-                        
-                        if (changedToThis) {
-                            // Another subject was changed to this subject, so count it
-                            count++;
+                        classesForThisSubjectToday++;
+                    }
+                });
+                
+                // Then, adjust for subject changes
+                fullSchedule[dayOfWeek].forEach(cls => {
+                    const changeKey = `${dateStr}-${cls.code}`;
+                    const change = userData?.subjectChanges?.[changeKey];
+                    
+                    if (change) {
+                        if (cls.code === subjectCode) {
+                            // This subject was changed to another, so subtract
+                            classesForThisSubjectToday--;
+                        } else if (change.newSubject === subjectCode) {
+                            // Another subject was changed to this subject, so add
+                            classesForThisSubjectToday++;
                         }
                     }
-                }
+                });
+                
+                count += classesForThisSubjectToday;
             }
             currentDate.setDate(currentDate.getDate() + 1);
         }

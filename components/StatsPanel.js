@@ -18,28 +18,33 @@ export default function StatsPanel({ userData }) {
             const dateStr = formatDateToLocalString(currentDate);
             
             if (fullSchedule[dayOfWeek]) {
-                for (const cls of fullSchedule[dayOfWeek]) {
+                // Count classes for this subject on this day
+                let classesForThisSubjectToday = 0;
+                
+                // First, count how many times this subject appears in the original schedule
+                fullSchedule[dayOfWeek].forEach(cls => {
                     if (cls.code === subjectCode) {
-                        // Check if this class was changed on this date
-                        const changeKey = `${dateStr}-${subjectCode}`;
-                        const wasChanged = userData?.subjectChanges?.[changeKey];
-                        
-                        if (!wasChanged) {
-                            // This subject was not changed, so count it
-                            count++;
-                        }
-                    } else {
-                        // Check if another subject was changed TO this subject on this date
-                        const changedToThis = userData?.subjectChanges && Object.entries(userData.subjectChanges).find(([key, change]) => 
-                            key.startsWith(dateStr) && change.newSubject === subjectCode
-                        );
-                        
-                        if (changedToThis) {
-                            // Another subject was changed to this subject, so count it
-                            count++;
+                        classesForThisSubjectToday++;
+                    }
+                });
+                
+                // Then, adjust for subject changes
+                fullSchedule[dayOfWeek].forEach(cls => {
+                    const changeKey = `${dateStr}-${cls.code}`;
+                    const change = userData?.subjectChanges?.[changeKey];
+                    
+                    if (change) {
+                        if (cls.code === subjectCode) {
+                            // This subject was changed to another, so subtract
+                            classesForThisSubjectToday--;
+                        } else if (change.newSubject === subjectCode) {
+                            // Another subject was changed to this subject, so add
+                            classesForThisSubjectToday++;
                         }
                     }
-                }
+                });
+                
+                count += classesForThisSubjectToday;
             }
             currentDate.setDate(currentDate.getDate() + 1);
         }

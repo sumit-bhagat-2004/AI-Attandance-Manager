@@ -255,13 +255,13 @@ export default async function handler(req, res) {
                 // Validate targetClass payload
                 if (!targetClass || typeof targetClass !== 'object') {
                     return res.status(400).json({ 
-                        error: 'Invalid targetClass: Missing or invalid target class data' 
+                        message: 'Invalid targetClass: Missing or invalid target class data' 
                     });
                 }
                 
                 if (!targetClass.code || !targetClass.date || !targetClass.time) {
                     return res.status(400).json({ 
-                        error: 'Invalid targetClass: Missing required properties (code, date, time)',
+                        message: 'Invalid targetClass: Missing required properties (code, date, time)',
                         received: targetClass
                     });
                 }
@@ -271,28 +271,36 @@ export default async function handler(req, res) {
                     userData.makeups = [];
                 }
                 
-                // Update the specific makeup by index if provided, otherwise find by subject
-                let targetMakeupIndex = makeupIndex;
+                // Find or create the makeup entry
+                let targetMakeupIndex = -1;
+                
+                // First, try to use the provided index if it's valid
                 if (makeupIndex >= 0 && makeupIndex < userData.makeups.length) {
-                    // Use the provided index
                     targetMakeupIndex = makeupIndex;
                 } else {
-                    // Fall back to finding by subject for backward compatibility
+                    // Try to find by subject
                     targetMakeupIndex = userData.makeups.findIndex(m => m.subjectToMakeup === subjectToMakeup);
                 }
                 
-                if (targetMakeupIndex !== -1 && targetMakeupIndex < userData.makeups.length) {
+                // If no existing makeup found, create a new one
+                if (targetMakeupIndex === -1) {
+                    // Create new makeup entry
+                    const newMakeup = {
+                        subjectToMakeup: subjectToMakeup,
+                        makeupTarget: targetClass.code,
+                        makeupDate: targetClass.date,
+                        makeupTime: targetClass.time,
+                        status: 'scheduled',
+                        createdAt: new Date().toISOString()
+                    };
+                    userData.makeups.push(newMakeup);
+                    targetMakeupIndex = userData.makeups.length - 1;
+                } else {
+                    // Update existing makeup entry
                     userData.makeups[targetMakeupIndex].makeupTarget = targetClass.code;
                     userData.makeups[targetMakeupIndex].makeupDate = targetClass.date;
                     userData.makeups[targetMakeupIndex].makeupTime = targetClass.time;
                     userData.makeups[targetMakeupIndex].status = 'scheduled';
-                } else {
-                    return res.status(400).json({ 
-                        error: 'Invalid makeup index: Makeup entry not found',
-                        makeupIndex,
-                        subjectToMakeup,
-                        availableMakeups: userData.makeups.length
-                    });
                 }
                 
                 // Update legacy single makeup for backward compatibility

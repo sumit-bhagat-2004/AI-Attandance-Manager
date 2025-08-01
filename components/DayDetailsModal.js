@@ -73,6 +73,9 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
         setSavingHints(prev => ({ ...prev, [classCode]: true }));
         
         try {
+            // Get effective subject name for this class and date
+            const effectiveSubject = getEffectiveSubjectDisplay(classCode, selectedDate);
+            
             // First validate the hint with AI to check for misleading content
             setValidatingHints(prev => ({ ...prev, [classCode]: true }));
             
@@ -83,7 +86,7 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
                     type: 'validateHint',
                     payload: {
                         classCode,
-                        subjectName: subjects[classCode]?.name || classCode,
+                        subjectName: effectiveSubject.name || classCode,
                         hint: hint.trim(),
                         context: `Validating class hint for academic subject. Check if this hint is appropriate, accurate, and helpful for students.`
                     }
@@ -142,6 +145,9 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
     
     const updateAIStudyMaterials = async (classCode, date, hint) => {
         try {
+            // Get effective subject name for this class and date
+            const effectiveSubject = getEffectiveSubjectDisplay(classCode, selectedDate);
+            
             const aiResponse = await fetch('/api/gemini', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -149,7 +155,7 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
                     type: 'generateStudyMaterial',
                     payload: {
                         classCode,
-                        subjectName: subjects[classCode]?.name || classCode,
+                        subjectName: effectiveSubject.name || classCode,
                         topicHint: hint,
                         date: date,
                         studentLevel: 'undergraduate' // Could be made dynamic
@@ -270,6 +276,46 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
         }
     };
 
+    // Helper function to get effective subject display considering subject changes
+    const getEffectiveSubjectDisplay = (classCode, date) => {
+        const dateStr = formatDateToLocalString(date);
+        const changeKey = `${dateStr}-${classCode}`;
+        
+        // Check if subject was changed for this class on this date
+        if (userData?.subjectChanges?.[changeKey]) {
+            const change = userData.subjectChanges[changeKey];
+            const newSubject = subjects[change.newSubject];
+            return {
+                code: change.newSubject,
+                name: newSubject?.name || change.newSubject,
+                isChanged: true,
+                originalName: subjects[classCode]?.name || classCode
+            };
+        }
+        
+        return {
+            code: classCode,
+            name: subjects[classCode]?.name || classCode,
+            isChanged: false
+        };
+    };
+
+    // Helper function to get correct attendance status considering subject changes
+    const getEffectiveAttendanceStatus = (classCode, date, dayHistory) => {
+        const dateStr = formatDateToLocalString(date);
+        const changeKey = `${dateStr}-${classCode}`;
+        
+        // Check if subject was changed for this class on this date
+        if (userData?.subjectChanges?.[changeKey]) {
+            const change = userData.subjectChanges[changeKey];
+            // Check attendance under the new subject code first, then fallback to original
+            return dayHistory[change.newSubject] || dayHistory[classCode];
+        }
+        
+        // No subject change, check under original class code
+        return dayHistory[classCode];
+    };
+
     // Check if this day has any makeup classes
     const makeupClasses = daySchedule.filter(cls => isMakeupTarget(cls.code, selectedDate));
     const hasMakeupClass = makeupClasses.length > 0;
@@ -296,8 +342,13 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
         }
     };
 
-    const attendedCount = Object.values(dayHistory).filter(status => status === 'attended').length;
-    const skippedCount = Object.values(dayHistory).filter(status => status === 'skipped').length;
+    // Calculate attendance counts considering subject changes
+    const attendedCount = daySchedule.filter(cls => 
+        getEffectiveAttendanceStatus(cls.code, selectedDate, dayHistory) === 'attended'
+    ).length;
+    const skippedCount = daySchedule.filter(cls => 
+        getEffectiveAttendanceStatus(cls.code, selectedDate, dayHistory) === 'skipped'
+    ).length;
     const totalClasses = daySchedule.length;
 
     const modalVariants = {
@@ -437,7 +488,8 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
                                     {/* All Classes with Enhanced Status */}
                                     {daySchedule.map((cls, index) => {
                                         const subject = subjects[cls.code];
-                                        const attendanceStatus = dayHistory[cls.code];
+                                        const effectiveSubject = getEffectiveSubjectDisplay(cls.code, selectedDate);
+                                        const attendanceStatus = getEffectiveAttendanceStatus(cls.code, selectedDate, dayHistory);
                                         const statusInfo = getClassStatus(cls, selectedDate, dayHistory);
                                         
                                         return (
@@ -473,7 +525,14 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
                                                             </motion.div>
                                                         </div>
                                                         <div>
-                                                            <h4 className={cn("font-semibold", statusInfo.textColor)}>{subject?.name || cls.code}</h4>
+                                                            <h4 className={cn("font-semibold flex items-center", statusInfo.textColor)}>
+                                                                <span className={effectiveSubject.isChanged ? "text-yellow-300" : ""}>
+                                                                    {effectiveSubject.name || cls.code}
+                                                                </span>
+                                                                {effectiveSubject.isChanged && (
+                                                                    <span className="ml-2 text-yellow-400 text-sm" title={`Changed from ${effectiveSubject.originalName}`}>⚡</span>
+                                                                )}
+                                                            </h4>
                                                             <p className="text-sm text-gray-400">
                                                                 {cls.time} • {statusInfo.status}
                                                             </p>
@@ -602,7 +661,7 @@ export default function DayDetailsModal({ isOpen, onClose, selectedDate, userDat
                                                     <div className="space-y-2">
                                                         <input
                                                             type="text"
-                                                            placeholder={`Add hint for ${subject?.name || cls.code}...`}
+                                                            placeholder={`Add hint for ${effectiveSubject.name || cls.code}...`}
                                                             className="w-full px-3 py-2 bg-gray-800/50 border border-gray-600/50 rounded-lg text-sm text-white placeholder-gray-400 focus:border-amber-500/50 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
                                                             value={classHints[cls.code] || ''}
                                                             onChange={(e) => setClassHints(prev => ({ ...prev, [cls.code]: e.target.value }))}

@@ -60,6 +60,22 @@ export default function CalendarView({ userData, currentUser }) {
         };
     };
 
+    // Helper function to get correct attendance status considering subject changes
+    const getEffectiveAttendanceStatus = (classCode, date, dayHistory) => {
+        const dateStr = formatDateToLocalString(date);
+        const changeKey = `${dateStr}-${classCode}`;
+        
+        // Check if subject was changed for this class on this date
+        if (userData?.subjectChanges?.[changeKey]) {
+            const change = userData.subjectChanges[changeKey];
+            // Check attendance under the new subject code first, then fallback to original
+            return dayHistory[change.newSubject] || dayHistory[classCode];
+        }
+        
+        // No subject change, check under original class code
+        return dayHistory[classCode];
+    };
+
     // Helper functions matching ScheduleView logic EXACTLY
     const isRecommendedBunk = (classCode, date) => {
         const dayOfWeek = date.getDay();
@@ -325,8 +341,14 @@ export default function CalendarView({ userData, currentUser }) {
                             const dayStr = formatDateToLocalString(day);
                             const dayHistory = userData.history[dayStr] || {};
                             const isCurrentDay = isToday(day);
-                            const attendedClasses = Object.values(dayHistory).filter(status => status === 'attended').length;
-                            const skippedClasses = Object.values(dayHistory).filter(status => status === 'skipped').length;
+                            
+                            // Calculate attendance counts considering subject changes
+                            const attendedClasses = daySchedule.filter(cls => 
+                                getEffectiveAttendanceStatus(cls.code, day, dayHistory) === 'attended'
+                            ).length;
+                            const skippedClasses = daySchedule.filter(cls => 
+                                getEffectiveAttendanceStatus(cls.code, day, dayHistory) === 'skipped'
+                            ).length;
                             
                             // Check for makeup classes using the same logic as ClassCard
                             const makeupClasses = daySchedule.filter(cls => isMakeupTarget(cls.code, day));
@@ -404,9 +426,9 @@ export default function CalendarView({ userData, currentUser }) {
                                     <div className="relative space-y-1 flex-1">
                                         {/* Show classes with their status */}
                                         {classStatusInfo.slice(0, 2).map((cls, clsIndex) => {
-                                            const attendanceStatus = dayHistory[cls.code];
+                                            const attendanceStatus = getEffectiveAttendanceStatus(cls.code, day, dayHistory);
                                             const statusInfo = cls.status;
-                                            const effectiveSubject = getEffectiveSubjectDisplay(cls.code, date);
+                                            const effectiveSubject = getEffectiveSubjectDisplay(cls.code, day);
                                             
                                             return (
                                                 <motion.div 
@@ -467,7 +489,7 @@ export default function CalendarView({ userData, currentUser }) {
                                     {/* Mobile: Simple attendance dots */}
                                     <div className="sm:hidden absolute bottom-1 left-1 right-1 flex justify-center space-x-1">
                                         {daySchedule.slice(0, 6).map((cls, idx) => {
-                                            const attendanceStatus = dayHistory[cls.code];
+                                            const attendanceStatus = getEffectiveAttendanceStatus(cls.code, day, dayHistory);
                                             const statusInfo = getClassStatus(cls, day, dayHistory);
                                             return (
                                                 <motion.div
