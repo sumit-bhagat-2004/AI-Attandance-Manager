@@ -37,8 +37,14 @@ export default function StatsPanel({ userData }) {
                         if (cls.code === subjectCode) {
                             // This subject was changed to another, so subtract
                             classesForThisSubjectToday--;
-                        } else if (change.newSubject === subjectCode) {
-                            // Another subject was changed to this subject, so add
+                            
+                            // If changed to NO_CLASS (holiday), don't add to any subject count
+                            if (change.newSubject !== 'NO_CLASS' && change.newSubject === subjectCode) {
+                                // Edge case: if somehow changed to itself, add back
+                                classesForThisSubjectToday++;
+                            }
+                        } else if (change.newSubject === subjectCode && change.newSubject !== 'NO_CLASS') {
+                            // Another subject was changed to this subject (and not to holiday), so add
                             classesForThisSubjectToday++;
                         }
                     }
@@ -58,9 +64,21 @@ export default function StatsPanel({ userData }) {
 
     const getSubjectStats = (code) => {
         const effectiveStartDate = getEffectiveCycleStartDate(userData);
+        
+        // Count attendance for both legacy and time-based formats (same as StatsView)
         const attendedCount = Object.values(userData.history || {}).reduce((acc, day) => {
-            return acc + (day[code] === 'attended' ? 1 : 0);
+            let count = 0;
+            // Check legacy format (just subject code)
+            if (day[code] === 'attended') count++;
+            // Check time-based format (subject-time)
+            Object.keys(day).forEach(key => {
+                if (key.startsWith(`${code}-`) && day[key] === 'attended') {
+                    count++;
+                }
+            });
+            return acc + count;
         }, 0);
+        
         const totalHeld = calculateAdjustedTotalClassesHeld(code);
         const percentage = getPercentage(code);
         
@@ -77,6 +95,7 @@ export default function StatsPanel({ userData }) {
     };
 
     const getAllSubjects = () => {
+        // Get ALL subjects including training (same as StatsView)
         return Object.keys(subjects)
             .map(code => getSubjectStats(code))
             .sort((a, b) => b.percentage - a.percentage);

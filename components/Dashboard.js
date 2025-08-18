@@ -12,7 +12,8 @@ import {
     BookOpenIcon,
     AcademicCapIcon,
     Bars3Icon,
-    XMarkIcon
+    XMarkIcon,
+    CogIcon
 } from '@heroicons/react/24/outline';
 import { LogOut } from 'lucide-react';
 import Confetti from 'react-confetti';
@@ -28,6 +29,7 @@ import ECAManagerModal from './ECAManagerModal';
 import ReportManagerModal from './ReportManagerModal';
 import CycleStartModal from './CycleStartModal';
 import PWAInstallPrompt from './PWAInstallPrompt';
+import SettingsModal, { useSettings } from './SettingsModal';
 import Footer from './Footer';
 import { cn, formatDate } from '../lib/utils';
 import { subjects, calculateTotalClassesHeld, getEffectiveCycleStartDate } from '../lib/scheduleData';
@@ -126,6 +128,10 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
     const [weeklyReports, setWeeklyReports] = useState([]);
     const [isGeneratingReports, setIsGeneratingReports] = useState(false);
     const [showCycleStartModal, setShowCycleStartModal] = useState(false);
+    const [showSettingsModal, setShowSettingsModal] = useState(false);
+
+    // Load user settings
+    const settings = useSettings(currentUser);
 
     // Debug: Log the current user
     console.log('🏠 Dashboard user:', currentUser);
@@ -306,9 +312,17 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                 return;
             }
 
-            // Use provided makeupInfo or fall back to current state
-            const subjectToMakeup = makeupInfo?.subject || selectedMakeupSubject || userData.makeup?.subjectToMakeup;
-            const makeupIndex = makeupInfo?.index !== undefined ? makeupInfo.index : selectedMakeupIndex;
+            // Handle new parameter structure from enhanced MakeupModal
+            let subjectToMakeup, makeupIndex;
+            if (makeupInfo && makeupInfo.subjectToMakeup && makeupInfo.makeupIndex !== undefined) {
+                // New structure: {makeupIndex, subjectToMakeup}
+                subjectToMakeup = makeupInfo.subjectToMakeup;
+                makeupIndex = makeupInfo.makeupIndex;
+            } else {
+                // Legacy structure or fallback to current state
+                subjectToMakeup = makeupInfo?.subject || selectedMakeupSubject || userData.makeup?.subjectToMakeup;
+                makeupIndex = makeupInfo?.index !== undefined ? makeupInfo.index : selectedMakeupIndex;
+            }
 
             const response = await fetch('/api/data', {
                 method: 'POST',
@@ -1316,82 +1330,106 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                     {/* Desktop Navigation */}
                     <div className="hidden lg:flex items-center space-x-3">
                         <div className="flex bg-gray-800/50 rounded-xl p-1">
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setView('schedule')}
-                                className={cn(
-                                    "flex items-center px-3 py-2 rounded-lg font-medium transition-all duration-200",
-                                    view === 'schedule'
-                                        ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                                        : "text-gray-400 hover:text-gray-300"
-                                )}
-                            >
-                                <BookOpenIcon className="h-4 w-4 mr-2" />
-                                Schedule
-                            </motion.button>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setView('stats')}
-                                className={cn(
-                                    "flex items-center px-3 py-2 rounded-lg font-medium transition-all duration-200",
-                                    view === 'stats'
-                                        ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                                        : "text-gray-400 hover:text-gray-300"
-                                )}
-                            >
-                                <TrophyIcon className="h-4 w-4 mr-2" />
-                                Stats
-                            </motion.button>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setView('makeup')}
-                                className={cn(
-                                    "flex items-center px-3 py-2 rounded-lg font-medium transition-all duration-200",
-                                    view === 'makeup'
-                                        ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                                        : "text-gray-400 hover:text-gray-300"
-                                )}
-                            >
-                                <BellIcon className="h-4 w-4 mr-2" />
-                                Makeup
-                            </motion.button>
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => setView('calendar')}
-                                className={cn(
-                                    "flex items-center px-3 py-2 rounded-lg font-medium transition-all duration-200",
-                                    view === 'calendar'
-                                        ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                                        : "text-gray-400 hover:text-gray-300"
-                                )}
-                            >
-                                <CalendarDaysIcon className="h-4 w-4 mr-2" />
-                                Calendar
-                            </motion.button>
+                            {settings.showScheduleView && (
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setView('schedule')}
+                                    className={cn(
+                                        "flex items-center px-3 py-2 rounded-lg font-medium transition-all duration-200",
+                                        view === 'schedule'
+                                            ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
+                                            : "text-gray-400 hover:text-gray-300"
+                                    )}
+                                >
+                                    <BookOpenIcon className="h-4 w-4 mr-2" />
+                                    Schedule
+                                </motion.button>
+                            )}
+                            {settings.showStatsView && (
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setView('stats')}
+                                    className={cn(
+                                        "flex items-center px-3 py-2 rounded-lg font-medium transition-all duration-200",
+                                        view === 'stats'
+                                            ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
+                                            : "text-gray-400 hover:text-gray-300"
+                                    )}
+                                >
+                                    <TrophyIcon className="h-4 w-4 mr-2" />
+                                    Stats
+                                </motion.button>
+                            )}
+                            {settings.showMakeupView && (
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setView('makeup')}
+                                    className={cn(
+                                        "flex items-center px-3 py-2 rounded-lg font-medium transition-all duration-200",
+                                        view === 'makeup'
+                                            ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
+                                            : "text-gray-400 hover:text-gray-300"
+                                    )}
+                                >
+                                    <BellIcon className="h-4 w-4 mr-2" />
+                                    Makeup
+                                </motion.button>
+                            )}
+                            {settings.showCalendarView && (
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setView('calendar')}
+                                    className={cn(
+                                        "flex items-center px-3 py-2 rounded-lg font-medium transition-all duration-200",
+                                        view === 'calendar'
+                                            ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
+                                            : "text-gray-400 hover:text-gray-300"
+                                    )}
+                                >
+                                    <CalendarDaysIcon className="h-4 w-4 mr-2" />
+                                    Calendar
+                                </motion.button>
+                            )}
                         </div>
                         
-                        {/* ECA Button */}
+                        {/* Settings Button */}
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => setShowECAModal(true)}
-                            className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium rounded-lg transition-all duration-200 shadow-lg"
-                            title="Add Extra Curricular Activity"
+                            onClick={() => setShowSettingsModal(true)}
+                            className="flex items-center px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-medium rounded-lg transition-all duration-200 shadow-lg"
+                            title="App Settings"
                         >
-                            <AcademicCapIcon className="h-4 w-4 mr-2" />
-                            Add ECA
+                            <CogIcon className="h-4 w-4 mr-2" />
+                            Settings
                         </motion.button>
                         
+                        {/* ECA Button */}
+                        {settings.showECAManager && (
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setShowECAModal(true)}
+                                className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium rounded-lg transition-all duration-200 shadow-lg"
+                                title="Add Extra Curricular Activity"
+                            >
+                                <AcademicCapIcon className="h-4 w-4 mr-2" />
+                                Add ECA
+                            </motion.button>
+                        )}
+                        
                         {/* PWA Install Button */}
-                        <PWAInstallPrompt 
-                            variant="button" 
-                            isVisible={true}
-                            onClose={() => {}}
-                        />
+                        {settings.showPWAInstallPrompt && (
+                            <PWAInstallPrompt 
+                                variant="button" 
+                                isVisible={true}
+                                onClose={() => {}}
+                            />
+                        )}
                         
                         {/* Profile Picture Section */}
                         {userProfilePicture && (
@@ -1483,120 +1521,150 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                                 
                                 {/* Navigation Buttons */}
                                 <div className="grid grid-cols-2 gap-2">
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => {
-                                            setView('schedule');
-                                            setIsMobileMenuOpen(false);
-                                        }}
-                                        className={cn(
-                                            "flex items-center justify-center px-3 py-3 rounded-lg font-medium transition-all duration-200",
-                                            view === 'schedule'
-                                                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                                                : "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
-                                        )}
-                                    >
-                                        <BookOpenIcon className="h-4 w-4 mr-2" />
-                                        Schedule
-                                    </motion.button>
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => {
-                                            setView('stats');
-                                            setIsMobileMenuOpen(false);
-                                        }}
-                                        className={cn(
-                                            "flex items-center justify-center px-3 py-3 rounded-lg font-medium transition-all duration-200",
-                                            view === 'stats'
-                                                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                                                : "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
-                                        )}
-                                    >
-                                        <TrophyIcon className="h-4 w-4 mr-2" />
-                                        Stats
-                                    </motion.button>
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => {
-                                            setView('makeup');
-                                            setIsMobileMenuOpen(false);
-                                        }}
-                                        className={cn(
-                                            "flex items-center justify-center px-3 py-3 rounded-lg font-medium transition-all duration-200",
-                                            view === 'makeup'
-                                                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                                                : "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
-                                        )}
-                                    >
-                                        <BellIcon className="h-4 w-4 mr-2" />
-                                        Makeup
-                                    </motion.button>
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => {
-                                            setView('calendar');
-                                            setIsMobileMenuOpen(false);
-                                        }}
-                                        className={cn(
-                                            "flex items-center justify-center px-3 py-3 rounded-lg font-medium transition-all duration-200",
-                                            view === 'calendar'
-                                                ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
-                                                : "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
-                                        )}
-                                    >
-                                        <CalendarDaysIcon className="h-4 w-4 mr-2" />
-                                        Calendar
-                                    </motion.button>
+                                    {settings.showScheduleView && (
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => {
+                                                setView('schedule');
+                                                setIsMobileMenuOpen(false);
+                                            }}
+                                            className={cn(
+                                                "flex items-center justify-center px-3 py-3 rounded-lg font-medium transition-all duration-200",
+                                                view === 'schedule'
+                                                    ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
+                                                    : "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
+                                            )}
+                                        >
+                                            <BookOpenIcon className="h-4 w-4 mr-2" />
+                                            Schedule
+                                        </motion.button>
+                                    )}
+                                    {settings.showStatsView && (
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => {
+                                                setView('stats');
+                                                setIsMobileMenuOpen(false);
+                                            }}
+                                            className={cn(
+                                                "flex items-center justify-center px-3 py-3 rounded-lg font-medium transition-all duration-200",
+                                                view === 'stats'
+                                                    ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
+                                                    : "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
+                                            )}
+                                        >
+                                            <TrophyIcon className="h-4 w-4 mr-2" />
+                                            Stats
+                                        </motion.button>
+                                    )}
+                                    {settings.showMakeupView && (
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => {
+                                                setView('makeup');
+                                                setIsMobileMenuOpen(false);
+                                            }}
+                                            className={cn(
+                                                "flex items-center justify-center px-3 py-3 rounded-lg font-medium transition-all duration-200",
+                                                view === 'makeup'
+                                                    ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
+                                                    : "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
+                                            )}
+                                        >
+                                            <BellIcon className="h-4 w-4 mr-2" />
+                                            Makeup
+                                        </motion.button>
+                                    )}
+                                    {settings.showCalendarView && (
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => {
+                                                setView('calendar');
+                                                setIsMobileMenuOpen(false);
+                                            }}
+                                            className={cn(
+                                                "flex items-center justify-center px-3 py-3 rounded-lg font-medium transition-all duration-200",
+                                                view === 'calendar'
+                                                    ? "bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg"
+                                                    : "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
+                                            )}
+                                        >
+                                            <CalendarDaysIcon className="h-4 w-4 mr-2" />
+                                            Calendar
+                                        </motion.button>
+                                    )}
                                 </div>
                                 
-                                {/* ECA and PWA Buttons - Mobile */}
+                                {/* Settings and ECA Buttons - Mobile */}
                                 <div className="grid grid-cols-2 gap-2 border-t border-gray-700/50 pt-3 mt-3">
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         onClick={() => {
-                                            setShowECAModal(true);
+                                            setShowSettingsModal(true);
                                             setIsMobileMenuOpen(false);
                                         }}
-                                        className="flex items-center justify-center px-3 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium rounded-lg transition-all duration-200 shadow-lg"
-                                        title="Add Extra Curricular Activity"
+                                        className="flex items-center justify-center px-3 py-3 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-medium rounded-lg transition-all duration-200 shadow-lg"
+                                        title="App Settings"
                                     >
-                                        <AcademicCapIcon className="h-4 w-4 mr-2" />
-                                        Add ECA
+                                        <CogIcon className="h-4 w-4 mr-2" />
+                                        Settings
                                     </motion.button>
                                     
-                                    <div className="flex items-center justify-center">
-                                        <PWAInstallPrompt 
-                                            variant="button" 
-                                            isVisible={true}
-                                            onClose={() => setIsMobileMenuOpen(false)}
-                                        />
+                                    {settings.showECAManager && (
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => {
+                                                setShowECAModal(true);
+                                                setIsMobileMenuOpen(false);
+                                            }}
+                                            className="flex items-center justify-center px-3 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-medium rounded-lg transition-all duration-200 shadow-lg"
+                                            title="Add Extra Curricular Activity"
+                                        >
+                                            <AcademicCapIcon className="h-4 w-4 mr-2" />
+                                            Add ECA
+                                        </motion.button>
+                                    )}
+                                    
+                                    <div className="flex items-center justify-center col-span-1">
+                                        {settings.showPWAInstallPrompt && (
+                                            <PWAInstallPrompt 
+                                                variant="button" 
+                                                isVisible={true}
+                                                onClose={() => setIsMobileMenuOpen(false)}
+                                            />
+                                        )}
                                     </div>
                                 </div>
                                 
                                 {/* Date Control Panel - Mobile */}
-                                <div className="border-t border-gray-700/50 pt-3 mt-3">
-                                    <p className="text-xs text-gray-400 mb-2 text-center">🕰️ Time Machine</p>
-                                    <DateControlPanel />
-                                </div>
+                                {settings.showTimeMachine && (
+                                    <div className="border-t border-gray-700/50 pt-3 mt-3">
+                                        <p className="text-xs text-gray-400 mb-2 text-center">🕰️ Time Machine</p>
+                                        <DateControlPanel />
+                                    </div>
+                                )}
                                 
                                 {/* Cycle Start Settings */}
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => {
-                                        setShowCycleStartModal(true);
-                                        setIsMobileMenuOpen(false);
-                                    }}
-                                    className="w-full flex items-center justify-center px-4 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-blue-400 hover:text-blue-300 rounded-lg font-medium transition-all duration-200 mb-3"
-                                >
-                                    <CalendarDaysIcon className="h-4 w-4 mr-2" />
-                                    Set Cycle Start Date
-                                </motion.button>
+                                {settings.showCycleStartSettings && (
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => {
+                                            setShowCycleStartModal(true);
+                                            setIsMobileMenuOpen(false);
+                                        }}
+                                        className="w-full flex items-center justify-center px-4 py-3 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-blue-400 hover:text-blue-300 rounded-lg font-medium transition-all duration-200 mb-3"
+                                    >
+                                        <CalendarDaysIcon className="h-4 w-4 mr-2" />
+                                        Set Cycle Start Date
+                                    </motion.button>
+                                )}
                                 
                                 {/* Logout Button */}
                                 <motion.button
@@ -1617,48 +1685,52 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                 </AnimatePresence>
 
                 {/* Report Manager Button - Enhanced with AI Integration */}
-                <motion.div variants={itemVariants} className="mb-8">
-                    <motion.button
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={() => setShowReportModal(true)}
-                        className="w-full lg:w-auto relative overflow-hidden group"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
-                        <div className="relative flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-bold text-white">
-                            <motion.div
-                                animate={{ 
-                                    rotate: [0, 10, -10, 0],
-                                    scale: [1, 1.1, 1]
-                                }}
-                                transition={{ 
-                                    duration: 2,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                }}
-                            >
-                                <SparklesIcon className="h-6 w-6" />
-                            </motion.div>
-                            <span className="text-lg">AI-Enhanced Weekly Reports & Study Plans</span>
-                            {weeklyReports.length > 0 && (
-                                <span className="bg-white/20 text-xs px-2 py-1 rounded-full">
-                                    {weeklyReports.length}
-                                </span>
-                            )}
-                        </div>
-                    </motion.button>
-                </motion.div>
+                {settings.showWeeklyReports && (
+                    <motion.div variants={itemVariants} className="mb-8">
+                        <motion.button
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setShowReportModal(true)}
+                            className="w-full lg:w-auto relative overflow-hidden group"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600 blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
+                            <div className="relative flex items-center justify-center gap-3 px-8 py-4 rounded-2xl font-bold text-white">
+                                <motion.div
+                                    animate={{ 
+                                        rotate: [0, 10, -10, 0],
+                                        scale: [1, 1.1, 1]
+                                    }}
+                                    transition={{ 
+                                        duration: 2,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                    }}
+                                >
+                                    <SparklesIcon className="h-6 w-6" />
+                                </motion.div>
+                                <span className="text-lg">AI-Enhanced Weekly Reports & Study Plans</span>
+                                {weeklyReports.length > 0 && (
+                                    <span className="bg-white/20 text-xs px-2 py-1 rounded-full">
+                                        {weeklyReports.length}
+                                    </span>
+                                )}
+                            </div>
+                        </motion.button>
+                    </motion.div>
+                )}
 
                 {/* Date Control Panel - Desktop (hidden on mobile) */}
-                <motion.div variants={itemVariants} className="hidden lg:block mb-6">
-                    <div className="bg-gray-800/30 rounded-xl p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                            <span className="text-sm text-gray-400">🕰️ Time Machine</span>
+                {settings.showTimeMachine && (
+                    <motion.div variants={itemVariants} className="hidden lg:block mb-6">
+                        <div className="bg-gray-800/30 rounded-xl p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                                <span className="text-sm text-gray-400">🕰️ Time Machine</span>
+                            </div>
+                            <DateControlPanel />
                         </div>
-                        <DateControlPanel />
-                    </div>
-                </motion.div>
+                    </motion.div>
+                )}
 
                 {/* Main Content - Dynamic Layout Based on View */}
                 <div className={cn(
@@ -1695,10 +1767,13 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                                             setSelectedMakeupIndex(index);
                                             setShowMakeupModal(true);
                                         }}
+                                        showAITopics={settings.showAITopics}
+                                        showSubjectChange={settings.showSubjectChange}
+                                        showMakeup={settings.showMakeupView}
                                     />
-                                ) : view === 'stats' ? (
+                                ) : view === 'stats' && settings.showStatsView ? (
                                     <StatsView userData={userData} />
-                                ) : view === 'makeup' ? (
+                                ) : view === 'makeup' && settings.showMakeupView ? (
                                     <MakeupView 
                                         userData={userData}
                                         subjects={subjects}
@@ -1707,7 +1782,7 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                                         onRemoveMakeup={handleRemoveMakeup}
                                         currentUser={currentUser}
                                     />
-                                ) : view === 'calendar' ? (
+                                ) : view === 'calendar' && settings.showCalendarView ? (
                                     <CalendarView userData={userData} currentUser={currentUser} />
                                 ) : (
                                     <ScheduleView 
@@ -1721,6 +1796,9 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                                             setSelectedMakeupIndex(index);
                                             setShowMakeupModal(true);
                                         }}
+                                        showAITopics={settings.showAITopics}
+                                        showSubjectChange={settings.showSubjectChange}
+                                        showMakeup={settings.showMakeupView}
                                     />
                                 )}
                             </motion.div>
@@ -1732,42 +1810,46 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                         <motion.div variants={itemVariants} className="xl:col-span-1 order-2">
                             <div className="space-y-6">
                                 {/* Stats Section - Compact */}
-                                <div>
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <motion.div
-                                            whileHover={{ scale: 1.1 }}
-                                            className="p-2 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg"
-                                        >
-                                            <TrophyIcon className="h-4 w-4 text-white" />
-                                        </motion.div>
-                                        <h2 className="text-lg font-bold text-white">Stats</h2>
+                                {settings.showStatsPanel && (
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <motion.div
+                                                whileHover={{ scale: 1.1 }}
+                                                className="p-2 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg"
+                                            >
+                                                <TrophyIcon className="h-4 w-4 text-white" />
+                                            </motion.div>
+                                            <h2 className="text-lg font-bold text-white">Stats</h2>
+                                        </div>
+                                        <StatsPanel userData={userData} />
                                     </div>
-                                    <StatsPanel userData={userData} />
-                                </div>
+                                )}
                                 
                                 {/* Makeup Section - Compact */}
-                                <div>
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <motion.div
-                                            whileHover={{ scale: 1.1 }}
-                                            className="p-2 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg"
-                                        >
-                                            <BellIcon className="h-4 w-4 text-white" />
-                                        </motion.div>
-                                        <h2 className="text-lg font-bold text-white">Makeup</h2>
+                                {settings.showMakeupView && (
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <motion.div
+                                                whileHover={{ scale: 1.1 }}
+                                                className="p-2 bg-gradient-to-r from-orange-500 to-red-600 rounded-lg"
+                                            >
+                                                <BellIcon className="h-4 w-4 text-white" />
+                                            </motion.div>
+                                            <h2 className="text-lg font-bold text-white">Makeup</h2>
+                                        </div>
+                                        <MakeupSection 
+                                            userData={userData}
+                                            onSelectMakeup={handleMakeupSelection}
+                                            onOpenMakeupModal={(subject, index = 0) => {
+                                                setSelectedMakeupSubject(subject);
+                                                setSelectedMakeupIndex(index);
+                                                setShowMakeupModal(true);
+                                            }}
+                                            onRescheduleMakeup={handleRescheduleMakeup}
+                                            onRemoveMakeup={handleRemoveMakeup}
+                                        />
                                     </div>
-                                    <MakeupSection 
-                                        userData={userData}
-                                        onSelectMakeup={handleMakeupSelection}
-                                        onOpenMakeupModal={(subject, index = 0) => {
-                                            setSelectedMakeupSubject(subject);
-                                            setSelectedMakeupIndex(index);
-                                            setShowMakeupModal(true);
-                                        }}
-                                        onRescheduleMakeup={handleRescheduleMakeup}
-                                        onRemoveMakeup={handleRemoveMakeup}
-                                    />
-                                </div>
+                                )}
                             </div>
                         </motion.div>
                     )}
@@ -1789,7 +1871,7 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
 
             {/* Makeup Modal */}
             <AnimatePresence>
-                {showMakeupModal && (
+                {showMakeupModal && settings.showMakeupView && (
                     <MakeupModal 
                         userData={userData} 
                         onSelect={handleMakeupSelection} 
@@ -1800,6 +1882,7 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                         }}
                         selectedSubject={selectedMakeupSubject}
                         currentUser={currentUser}
+                        makeupIndex={selectedMakeupIndex}
                     />
                 )}
             </AnimatePresence>
@@ -1832,6 +1915,13 @@ export default function Dashboard({ currentUser, userFullName, userProfilePictur
                 onClose={() => setShowCycleStartModal(false)}
                 onConfirm={handleSetCycleStart}
                 currentCycleStart={userData?.cycleStartDate}
+            />
+
+            {/* Settings Modal */}
+            <SettingsModal
+                isOpen={showSettingsModal}
+                onClose={() => setShowSettingsModal(false)}
+                currentUser={currentUser}
             />
 
             {/* Confetti Celebration */}

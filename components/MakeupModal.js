@@ -11,10 +11,19 @@ import {
 import { fullSchedule, bunkSchedule, mandatorySchedule, subjects, getEffectiveCycleStartDate } from '../lib/scheduleData';
 import { cn, formatDateToLocalString } from '../lib/utils';
 
-export default function MakeupModal({ userData, onSelect, onClose, selectedSubject, currentUser }) {
+export default function MakeupModal({ userData, onSelect, onClose, selectedSubject, currentUser, makeupIndex = 0 }) {
     const [availablePastClasses, setAvailablePastClasses] = useState([]);
     const [loadingPastClasses, setLoadingPastClasses] = useState(false);
     const [activeTab, setActiveTab] = useState('future'); // 'future' or 'past'
+    
+    // Determine the missed subject from the specific makeup or fallback to legacy/selectedSubject
+    const missedSubject = (() => {
+        if (selectedSubject) return selectedSubject;
+        if (userData?.makeups && userData.makeups[makeupIndex]) {
+            return userData.makeups[makeupIndex].subjectToMakeup;
+        }
+        return userData.makeup?.subjectToMakeup;
+    })();
     
     // Fetch available past classes when modal opens
     useEffect(() => {
@@ -55,7 +64,7 @@ export default function MakeupModal({ userData, onSelect, onClose, selectedSubje
         }
     };
     
-    const handleUsePastClass = async (pastClass, makeupIndex = 0) => {
+    const handleUsePastClass = async (pastClass, targetMakeupIndex = makeupIndex) => {
         try {
             const response = await fetch('/api/data', {
                 method: 'POST',
@@ -64,7 +73,7 @@ export default function MakeupModal({ userData, onSelect, onClose, selectedSubje
                     action: 'usePastNonMandatory',
                     payload: {
                         user: currentUser,
-                        makeupIndex,
+                        makeupIndex: targetMakeupIndex,
                         pastClassDate: pastClass.date,
                         pastClassCode: pastClass.class // Use 'class' not 'code'
                     }
@@ -102,7 +111,6 @@ export default function MakeupModal({ userData, onSelect, onClose, selectedSubje
         const bunks = [];
         const today = new Date();
         const cycleStartDate = getEffectiveCycleStartDate(userData);
-        const missedSubject = selectedSubject || userData.makeup?.subjectToMakeup; // The subject that was missed
 
         // Look ahead for the next 10 weeks (70 days) to find makeup opportunities
         for (let dayOffset = 1; dayOffset < 70; dayOffset++) { // Start from tomorrow
@@ -140,21 +148,21 @@ export default function MakeupModal({ userData, onSelect, onClose, selectedSubje
         
         // Sort by date and return next 10 options
         return bunks.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(0, 10);
-    }, [userData, selectedSubject]);
+    }, [userData, selectedSubject, makeupIndex, missedSubject]);
 
     const futureBunks = getFutureBunks();
 
     return (
         <AnimatePresence>
             <motion.div 
-                className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4"
+                className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-2 sm:p-4"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
             >
                 <motion.div 
-                    className="glass-card rounded-2xl shadow-2xl w-full max-w-2xl border border-gray-700/50 overflow-hidden"
+                    className="glass-card rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] border border-gray-700/50 overflow-hidden overflow-y-auto"
                     initial={{ scale: 0.9, opacity: 0, y: 20 }}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -162,7 +170,7 @@ export default function MakeupModal({ userData, onSelect, onClose, selectedSubje
                     onClick={(e) => e.stopPropagation()}
                 >
                     {/* Header */}
-                    <div className="relative p-6 bg-gradient-to-r from-accent-600/20 to-primary-600/20 border-b border-gray-700/50">
+                    <div className="relative p-4 sm:p-6 bg-gradient-to-r from-accent-600/20 to-primary-600/20 border-b border-gray-700/50">
                         <motion.button
                             onClick={onClose}
                             className="absolute top-4 right-4 p-2 rounded-xl bg-gray-800/50 hover:bg-gray-700/50 transition-colors group"
@@ -172,20 +180,20 @@ export default function MakeupModal({ userData, onSelect, onClose, selectedSubje
                             <XMarkIcon className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
                         </motion.button>
                         
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-start space-x-3 sm:space-x-4 pr-12">
                             <motion.div
-                                className="w-12 h-12 bg-gradient-to-r from-accent-500 to-primary-500 rounded-xl flex items-center justify-center shadow-lg"
+                                className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-accent-500 to-primary-500 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0"
                                 initial={{ rotate: 0 }}
                                 animate={{ rotate: 360 }}
                                 transition={{ duration: 0.8, ease: "easeInOut" }}
                             >
-                                <AcademicCapIcon className="w-6 h-6 text-white" />
+                                <AcademicCapIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                             </motion.div>
-                            <div>
-                                <h3 className="text-2xl font-bold bg-gradient-to-r from-accent-400 to-primary-400 bg-clip-text text-transparent">
+                            <div className="min-w-0 flex-1">
+                                <h3 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-accent-400 to-primary-400 bg-clip-text text-transparent leading-tight">
                                     Choose Makeup Class
                                 </h3>
-                                <p className="text-gray-400 mt-1">
+                                <p className="text-gray-400 mt-1 text-sm sm:text-base">
                                     You missed a mandatory class for <span className="text-accent-300 font-semibold">{subjects[selectedSubject || userData.makeup?.subjectToMakeup]?.name}</span>. Select a future "Recommended Bunk" to attend as makeup.
                                 </p>
                             </div>
@@ -193,14 +201,14 @@ export default function MakeupModal({ userData, onSelect, onClose, selectedSubje
                         
                         {/* Tab Navigation */}
                         <motion.div 
-                            className="mt-6 flex bg-gray-800/50 rounded-xl p-1"
+                            className="mt-4 sm:mt-6 flex bg-gray-800/50 rounded-xl p-1"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.15 }}
                         >
                             <button
                                 onClick={() => setActiveTab('future')}
-                                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-300 ${
+                                className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-medium transition-all duration-300 text-sm sm:text-base ${
                                     activeTab === 'future'
                                         ? 'bg-accent-500 text-white shadow-lg'
                                         : 'text-gray-400 hover:text-white hover:bg-gray-700/30'
@@ -210,7 +218,7 @@ export default function MakeupModal({ userData, onSelect, onClose, selectedSubje
                             </button>
                             <button
                                 onClick={() => setActiveTab('past')}
-                                className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-300 ${
+                                className={`flex-1 py-2 sm:py-3 px-3 sm:px-4 rounded-lg font-medium transition-all duration-300 text-sm sm:text-base ${
                                     activeTab === 'past'
                                         ? 'bg-primary-500 text-white shadow-lg'
                                         : 'text-gray-400 hover:text-white hover:bg-gray-700/30'
@@ -246,7 +254,7 @@ export default function MakeupModal({ userData, onSelect, onClose, selectedSubje
                     </div>
 
                     {/* Content */}
-                    <div className="p-6 max-h-80 overflow-y-auto custom-scrollbar">
+                    <div className="p-4 sm:p-6 max-h-60 sm:max-h-80 overflow-y-auto custom-scrollbar">
                         {activeTab === 'future' ? (
                             // Future Classes Tab
                             futureBunks.length > 0 ? (
@@ -267,14 +275,19 @@ export default function MakeupModal({ userData, onSelect, onClose, selectedSubje
                                                 onClick={() => {
                                                     // Validate bunk data before calling onSelect
                                                     if (bunk && bunk.code && bunk.date && bunk.time) {
-                                                        onSelect(bunk);
+                                                        // Pass makeup details with index for proper identification
+                                                        onSelect({
+                                                            ...bunk,
+                                                            makeupIndex: makeupIndex,
+                                                            subjectToMakeup: missedSubject
+                                                        });
                                                     } else {
                                                         console.error("Invalid bunk data:", bunk);
                                                         alert("Invalid class data. Please refresh and try again.");
                                                     }
                                                 }}
                                                 className={cn(
-                                                    "w-full text-left p-4 rounded-xl transition-all duration-300 group relative overflow-hidden",
+                                                    "w-full text-left p-3 sm:p-4 rounded-xl transition-all duration-300 group relative overflow-hidden",
                                                     "bg-gray-800/50 hover:bg-gradient-to-r hover:from-primary-600/20 hover:to-secondary-600/20",
                                                     "border border-gray-700/50 hover:border-primary-500/50",
                                                     "transform hover:scale-[1.02] hover:-translate-y-1",
@@ -308,12 +321,12 @@ export default function MakeupModal({ userData, onSelect, onClose, selectedSubje
                                                         </div>
                                                         
                                                         <div className="space-y-2">
-                                                            <div className="flex items-center space-x-4 text-sm text-gray-400">
+                                                            <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-1 sm:space-y-0 text-sm text-gray-400">
                                                                 <div className="flex items-center space-x-1">
                                                                     <CalendarIcon className="w-4 h-4" />
-                                                                    <span>
+                                                                    <span className="text-xs sm:text-sm">
                                                                         {date.toLocaleDateString('en-US', { 
-                                                                            weekday: 'long', 
+                                                                            weekday: 'short', 
                                                                             month: 'short', 
                                                                             day: 'numeric' 
                                                                         })}
@@ -321,7 +334,7 @@ export default function MakeupModal({ userData, onSelect, onClose, selectedSubje
                                                                 </div>
                                                                 <div className="flex items-center space-x-1">
                                                                     <ClockIcon className="w-4 h-4" />
-                                                                    <span className="font-medium text-gray-300">{bunk.time}</span>
+                                                                    <span className="font-medium text-gray-300 text-xs sm:text-sm">{bunk.time}</span>
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-center space-x-2 text-xs">

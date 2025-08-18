@@ -22,11 +22,14 @@ export default function ClassCard({
     onGetClassTopics,
     currentUser,
     onSubjectChange,
-    userData
+    userData,
+    showAITopics = true,
+    showSubjectChange = true,
+    showMakeup = true
 }) {
     const [showAIModal, setShowAIModal] = useState(false);
     const [isLoadingAI, setIsLoadingAI] = useState(false);
-    const [showSubjectChange, setShowSubjectChange] = useState(false);
+    const [showSubjectChangeDropdown, setShowSubjectChangeDropdown] = useState(false);
     
     // Get subject info with subject change handling
     const subject = subjects[classInfo.code];
@@ -40,17 +43,32 @@ export default function ClassCard({
         // Check if subject was changed for this class on this date
         if (userData?.subjectChanges?.[changeKey]) {
             const change = userData.subjectChanges[changeKey];
+            
+            // Handle holiday/no class
+            if (change.newSubject === 'NO_CLASS') {
+                return {
+                    name: 'No Class (Holiday)',
+                    isChanged: true,
+                    isHoliday: true,
+                    originalSubject: subject?.name || classInfo.code,
+                    changeReason: change.reason,
+                    newSubjectCode: 'NO_CLASS'
+                };
+            }
+            
+            // Handle regular subject change
             const newSubject = subjects[change.newSubject];
             return {
                 ...newSubject,
                 isChanged: true,
+                isHoliday: false,
                 originalSubject: subject?.name || classInfo.code,
                 changeReason: change.reason,
                 newSubjectCode: change.newSubject // Store the new subject code
             };
         }
         
-        return { ...subject, isChanged: false };
+        return { ...subject, isChanged: false, isHoliday: false };
     };
     
     const displaySubject = getDisplaySubject();
@@ -61,10 +79,20 @@ export default function ClassCard({
 
     // Determine if this class is mandatory (for 80% attendance requirement)
     const classDate = dayDate ? new Date(dayDate) : new Date();
-    const isMandatoryFor80Percent = isMandatoryClass(weekInCycle, classDate.getDay(), effectiveSubjectCode) || isMakeupTarget;
+    const isMandatoryFor80Percent = isMandatoryClass(weekInCycle, classDate.getDay(), effectiveSubjectCode) || (showMakeup && isMakeupTarget);
 
     // Determine card styling based on type with inline styles for guaranteed colors
     const cardStyles = useMemo(() => {
+        // Holiday classes
+        if (displaySubject.isHoliday) {
+            return {
+                backgroundColor: 'rgba(239, 68, 68, 0.2)', // Red background for holidays
+                borderColor: '#ef4444',
+                text: 'text-white',
+                status: 'Holiday'
+            };
+        }
+
         // Past classes
         if (isPast) {
             // If attendance was never recorded, show as neutral/unrecorded
@@ -89,7 +117,7 @@ export default function ClassCard({
         }
 
         // Future/current classes - Check makeup target FIRST
-        if (isMakeupTarget) {
+        if (showMakeup && isMakeupTarget) {
             return {
                 backgroundColor: 'rgba(251, 146, 60, 0.3)', // Orange background
                 borderColor: '#fb923c',
@@ -98,7 +126,7 @@ export default function ClassCard({
             };
         }
 
-        if (isRecommendedBunk && !isMakeupTarget) {
+        if (isRecommendedBunk && !(showMakeup && isMakeupTarget)) {
             return {
                 backgroundColor: 'rgba(100, 116, 139, 0.2)', // Slate background
                 borderColor: '#64748b',
@@ -114,7 +142,7 @@ export default function ClassCard({
             text: 'text-white',
             status: 'Required for 80%'
         };
-    }, [isPast, isMakeupTarget, isRecommendedBunk, attendanceStatus]);
+    }, [isPast, isMakeupTarget, isRecommendedBunk, attendanceStatus, displaySubject.isHoliday, showMakeup]);
 
     const handleAttendClick = () => {
         onToggleAttendance(effectiveSubjectCode, 'attended', classInfo.time);
@@ -128,11 +156,49 @@ export default function ClassCard({
         setShowAIModal(true);
     };
 
-    const handleSubjectChange = (newSubjectCode) => {
+    const handleSubjectChange = async (newSubjectCode) => {
         if (onSubjectChange) {
-            onSubjectChange(classInfo.code, newSubjectCode, dayDate);
+            try {
+                await onSubjectChange(classInfo.code, newSubjectCode, dayDate);
+                setShowSubjectChangeDropdown(false);
+            } catch (error) {
+                console.error('Error changing subject:', error);
+                alert('Failed to change subject. Please try again.');
+            }
         }
-        setShowSubjectChange(false);
+    };
+
+    const handleRevertHoliday = async () => {
+        try {
+            const dateStr = dayDate.toISOString().split('T')[0];
+            const response = await fetch('/api/data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: 'removeSubjectChange', 
+                    payload: {
+                        user: currentUser,
+                        originalSubject: classInfo.code,
+                        date: dateStr
+                    }
+                }),
+            });
+            
+            const data = await response.json();
+            if (response.ok) {
+                // Force a refresh by calling onSubjectChange with a special refresh signal
+                if (onSubjectChange) {
+                    // Use a special flag to indicate this is a refresh, not a new change
+                    await onSubjectChange(classInfo.code, '__REFRESH__', dayDate);
+                }
+            } else {
+                console.error('Failed to revert holiday:', data.message);
+                alert(`Failed to revert holiday: ${data.message}`);
+            }
+        } catch (error) {
+            console.error('Error reverting holiday:', error);
+            alert('Error reverting holiday. Please try again.');
+        }
     };
 
     const handleGenerateTopics = async (classCode, hint) => {
@@ -211,37 +277,46 @@ export default function ClassCard({
                         <div 
                             className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border shadow-md"
                             style={{
-                                backgroundColor: isMakeupTarget 
-                                    ? 'rgba(251, 146, 60, 0.8)'
-                                    : isRecommendedBunk && !isMakeupTarget
-                                        ? 'rgba(100, 116, 139, 0.8)'
-                                        : isPast 
-                                            ? attendanceStatus === 'attended' 
-                                                ? 'rgba(34, 197, 94, 0.8)'
-                                                : 'rgba(239, 68, 68, 0.8)'
-                                            : 'rgba(37, 99, 235, 0.8)',
-                                borderColor: isMakeupTarget 
-                                    ? 'rgb(251, 146, 60)'
-                                    : isRecommendedBunk && !isMakeupTarget
-                                        ? 'rgb(100, 116, 139)'
-                                        : isPast 
-                                            ? attendanceStatus === 'attended' 
-                                                ? 'rgb(34, 197, 94)'
-                                                : 'rgb(239, 68, 68)'
-                                            : 'rgb(37, 99, 235)',
+                                backgroundColor: displaySubject.isHoliday
+                                    ? 'rgba(239, 68, 68, 0.8)'
+                                    : showMakeup && isMakeupTarget 
+                                        ? 'rgba(251, 146, 60, 0.8)'
+                                        : isRecommendedBunk && !(showMakeup && isMakeupTarget)
+                                            ? 'rgba(100, 116, 139, 0.8)'
+                                            : isPast 
+                                                ? attendanceStatus === 'attended' 
+                                                    ? 'rgba(34, 197, 94, 0.8)'
+                                                    : 'rgba(239, 68, 68, 0.8)'
+                                                : 'rgba(37, 99, 235, 0.8)',
+                                borderColor: displaySubject.isHoliday
+                                    ? 'rgb(239, 68, 68)'
+                                    : showMakeup && isMakeupTarget 
+                                        ? 'rgb(251, 146, 60)'
+                                        : isRecommendedBunk && !(showMakeup && isMakeupTarget)
+                                            ? 'rgb(100, 116, 139)'
+                                            : isPast 
+                                                ? attendanceStatus === 'attended' 
+                                                    ? 'rgb(34, 197, 94)'
+                                                    : 'rgb(239, 68, 68)'
+                                                : 'rgb(37, 99, 235)',
                                 color: 'white'
                             }}
                         >
-                            <AcademicCapIcon className="w-6 h-6" />
+                            {displaySubject.isHoliday ? '🏖️' : <AcademicCapIcon className="w-6 h-6" />}
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center space-x-2 mb-1">
-                                <h3 className="font-bold text-base text-white leading-tight">
-                                    {subjectName}
+                                <h3 className={`font-bold text-base leading-tight ${displaySubject.isHoliday ? 'text-red-400' : 'text-white'}`}>
+                                    {displaySubject.isHoliday ? '🏖️ No Class (Holiday)' : subjectName}
                                 </h3>
-                                {displaySubject.isChanged && (
+                                {displaySubject.isChanged && !displaySubject.isHoliday && (
                                     <span className="px-2 py-1 text-xs bg-orange-500/20 text-orange-300 rounded-full border border-orange-500/30">
                                         Changed
+                                    </span>
+                                )}
+                                {displaySubject.isHoliday && (
+                                    <span className="px-2 py-1 text-xs bg-red-500/20 text-red-300 rounded-full border border-red-500/30">
+                                        Holiday
                                     </span>
                                 )}
                             </div>
@@ -266,18 +341,18 @@ export default function ClassCard({
                     <div 
                         className="px-3 py-1.5 rounded-full text-xs font-bold text-center border shadow-sm"
                         style={{
-                            backgroundColor: isMakeupTarget 
+                            backgroundColor: showMakeup && isMakeupTarget 
                                 ? 'rgba(251, 146, 60, 0.9)'
-                                : isRecommendedBunk && !isMakeupTarget
+                                : isRecommendedBunk && !(showMakeup && isMakeupTarget)
                                     ? 'rgba(100, 116, 139, 0.9)'
                                     : isPast 
                                         ? attendanceStatus === 'attended' 
                                             ? 'rgba(34, 197, 94, 0.9)'
                                             : 'rgba(239, 68, 68, 0.9)'
                                         : 'rgba(37, 99, 235, 0.9)',
-                            borderColor: isMakeupTarget 
+                            borderColor: showMakeup && isMakeupTarget 
                                 ? 'rgb(251, 146, 60)'
-                                : isRecommendedBunk && !isMakeupTarget
+                                : isRecommendedBunk && !(showMakeup && isMakeupTarget)
                                     ? 'rgb(100, 116, 139)'
                                     : isPast 
                                         ? attendanceStatus === 'attended' 
@@ -299,9 +374,9 @@ export default function ClassCard({
                     </div>
                     <div className="flex items-center gap-2">
                         {/* Subject Change Button - For teacher absence */}
-                        {!isPast && onSubjectChange && (
+                        {showSubjectChange && !isPast && onSubjectChange && (
                             <motion.button
-                                onClick={() => setShowSubjectChange(!showSubjectChange)}
+                                onClick={() => setShowSubjectChangeDropdown(!showSubjectChangeDropdown)}
                                 className="px-2 py-1 rounded-lg bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 border border-orange-400 text-white shadow-md text-xs font-semibold transition-all duration-200"
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -312,7 +387,7 @@ export default function ClassCard({
                         )}
                         
                         {/* AI Topics Button */}
-                        {onGetClassTopics && !isPast && (
+                        {showAITopics && onGetClassTopics && !isPast && (
                             <motion.button
                                 onClick={handleAITopicsClick}
                                 className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 border border-purple-400 text-white shadow-md text-xs font-semibold transition-all duration-200 flex items-center gap-2"
@@ -327,15 +402,26 @@ export default function ClassCard({
                 </div>
 
                 {/* Subject Change Dropdown */}
-                {showSubjectChange && !isPast && (
+                {showSubjectChangeDropdown && !isPast && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
                         className="bg-gray-800/50 border border-gray-600 rounded-lg p-3 space-y-2"
                     >
-                        <p className="text-xs text-gray-300 mb-2">Select replacement subject:</p>
+                        <p className="text-xs text-gray-300 mb-2">Select replacement subject or mark as holiday:</p>
                         <div className="grid grid-cols-2 gap-2">
+                            {/* Holiday/No Class Option */}
+                            <motion.button
+                                onClick={() => handleSubjectChange('NO_CLASS')}
+                                className="px-2 py-1 bg-red-700 hover:bg-red-600 border border-red-500 rounded text-xs text-white transition-all duration-200 font-semibold"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                🏖️ No Class (Holiday)
+                            </motion.button>
+                            
+                            {/* Subject replacement options */}
                             {Object.entries(subjects).map(([code, subject]) => (
                                 code !== classInfo.code && (
                                     <motion.button
@@ -354,7 +440,7 @@ export default function ClassCard({
                 )}
 
                 {/* Special indicators - Clean */}
-                {isMakeupTarget && (
+                {showMakeup && isMakeupTarget && (
                     <div className="bg-gradient-to-r from-orange-500/30 to-red-500/30 border border-orange-400/50 rounded-lg p-2 shadow-lg">
                         <p className="text-xs text-center font-bold text-orange-200 flex items-center justify-center gap-2">
                             <span>🎯</span>
@@ -377,7 +463,22 @@ export default function ClassCard({
 
                 {/* Action buttons - Clean layout */}
                 <div className="mt-auto pt-2">
-                    {(!isPast || (!attendanceStatus || attendanceStatus === 'unrecorded')) ? (
+                    {displaySubject.isHoliday ? (
+                        /* Holiday classes - Show revert option */
+                        <div className="space-y-3">
+                            <div className="text-center py-3 bg-red-500/20 rounded-lg border border-red-400/50">
+                                <div className="text-red-400 font-semibold text-sm mb-2">🏖️ Holiday - No Class</div>
+                                <motion.button
+                                    onClick={handleRevertHoliday}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg border border-red-400 transition-all duration-200"
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                >
+                                    🔄 Revert Holiday
+                                </motion.button>
+                            </div>
+                        </div>
+                    ) : (!isPast || (!attendanceStatus || attendanceStatus === 'unrecorded')) ? (
                         <div className="space-y-3">
                             {/* Show note for past unrecorded classes */}
                             {isPast && (!attendanceStatus || attendanceStatus === 'unrecorded') && (
@@ -519,15 +620,17 @@ export default function ClassCard({
             </div>
             
             {/* AI Topics Modal */}
-            <AITopicsModal
-                isOpen={showAIModal}
-                onClose={() => setShowAIModal(false)}
-                classCode={effectiveSubjectCode}
-                subjectName={subjectName}
-                onGenerateTopics={handleGenerateTopics}
-                onStoreHint={currentUser ? handleStoreHint : null}
-                isLoading={isLoadingAI}
-            />
+            {showAITopics && (
+                <AITopicsModal
+                    isOpen={showAIModal}
+                    onClose={() => setShowAIModal(false)}
+                    classCode={effectiveSubjectCode}
+                    subjectName={subjectName}
+                    onGenerateTopics={handleGenerateTopics}
+                    onStoreHint={currentUser ? handleStoreHint : null}
+                    isLoading={isLoadingAI}
+                />
+            )}
         </motion.div>
     );
 }

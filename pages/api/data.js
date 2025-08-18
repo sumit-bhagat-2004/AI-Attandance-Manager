@@ -152,26 +152,13 @@ export default async function handler(req, res) {
                     console.log(`Auto-adjusting cycle start date from ${userData.cycleStartDate} to ${newCycleStartDate} for user ${user}`);
                 }
                 
-                // Handle removing attendance records - support both old and new formats
+                // Handle removing attendance records
                 if (status === 'unrecorded') {
-                    const dayHistory = userData.history[dateStr] || {};
-                    const unsetFields = {};
-                    
-                    // Check which format(s) exist and remove them
-                    if (dayHistory[attendanceKey]) {
-                        unsetFields[updateField] = "";
-                    }
-                    // Also check legacy format (just classCode) if different from attendanceKey
-                    if (attendanceKey !== classCode && dayHistory[classCode]) {
-                        unsetFields[`history.${dateStr}.${classCode}`] = "";
-                    }
-                    
-                    if (Object.keys(unsetFields).length > 0) {
-                        await collection.updateOne(
-                            { username: user },
-                            { $unset: unsetFields }
-                        );
-                    }
+                    // Remove the attendance record
+                    await collection.updateOne(
+                        { username: user },
+                        { $unset: { [updateField]: "" } }
+                    );
                     
                     // If there was a makeup requirement for this class on this date, remove it
                     if (userData.makeups) {
@@ -290,17 +277,18 @@ export default async function handler(req, res) {
                 // Find or create the makeup entry
                 let targetMakeupIndex = -1;
                 
-                // First, try to use the provided index if it's valid
+                // First, try to use the provided index if it's valid and the makeup exists
                 if (makeupIndex >= 0 && makeupIndex < userData.makeups.length) {
                     targetMakeupIndex = makeupIndex;
                 } else {
-                    // Try to find by subject
-                    targetMakeupIndex = userData.makeups.findIndex(m => m.subjectToMakeup === subjectToMakeup);
+                    // For new makeups, always create a new entry (allow multiple makeups for same subject)
+                    // Only update existing if explicitly targeting an existing makeup by valid index
+                    targetMakeupIndex = -1;
                 }
                 
-                // If no existing makeup found, create a new one
+                // If no valid existing makeup found, create a new one
                 if (targetMakeupIndex === -1) {
-                    // Create new makeup entry
+                    // Create new makeup entry (allows multiple makeups for same subject)
                     const newMakeup = {
                         subjectToMakeup: subjectToMakeup,
                         makeupTarget: targetClass.code,
@@ -517,7 +505,7 @@ export default async function handler(req, res) {
                 console.log(`User ${user} set cycle start date to: ${newStartDate.toISOString()}`);
                 
             } else if (action === 'changeSubject') {
-                // Handle class subject change due to teacher absence
+                // Handle class subject change due to teacher absence or holiday
                 const { originalSubject, newSubject, date, reason } = payload;
                 
                 // Initialize subjectChanges if it doesn't exist
@@ -526,13 +514,26 @@ export default async function handler(req, res) {
                 const dateStr = new Date(date).toISOString().split('T')[0];
                 const changeKey = `${dateStr}-${originalSubject}`;
                 
-                // Store the subject change
-                userData.subjectChanges[changeKey] = {
-                    originalSubject: originalSubject,
-                    newSubject: newSubject,
-                    changeDate: new Date().toISOString(),
-                    reason: reason || 'teacher_absence'
-                };
+                // Handle special case for 'NO_CLASS' (holiday/no class)
+                if (newSubject === 'NO_CLASS') {
+                    // Store as holiday/no class
+                    userData.subjectChanges[changeKey] = {
+                        originalSubject: originalSubject,
+                        newSubject: 'NO_CLASS',
+                        changeDate: new Date().toISOString(),
+                        reason: reason || 'holiday',
+                        isHoliday: true
+                    };
+                } else {
+                    // Regular subject change
+                    userData.subjectChanges[changeKey] = {
+                        originalSubject: originalSubject,
+                        newSubject: newSubject,
+                        changeDate: new Date().toISOString(),
+                        reason: reason || 'teacher_absence',
+                        isHoliday: false
+                    };
+                }
                 
                 // Update in database
                 await collection.updateOne(
@@ -541,9 +542,37 @@ export default async function handler(req, res) {
                 );
                 
                 return res.status(200).json({ 
-                    message: "Subject changed successfully", 
+                    message: newSubject === 'NO_CLASS' ? "Class marked as holiday" : "Subject changed successfully", 
                     updatedData: userData 
                 });
+                
+            } else if (action === 'removeSubjectChange') {
+                // Handle removing subject change or holiday marking
+                const { originalSubject, date } = payload;
+                
+                if (!userData.subjectChanges) {
+                    return res.status(400).json({ message: "No subject changes found" });
+                }
+                
+                const dateStr = new Date(date).toISOString().split('T')[0];
+                const changeKey = `${dateStr}-${originalSubject}`;
+                
+                if (userData.subjectChanges[changeKey]) {
+                    delete userData.subjectChanges[changeKey];
+                    
+                    // Update in database
+                    await collection.updateOne(
+                        { username: user },
+                        { $set: { subjectChanges: userData.subjectChanges } }
+                    );
+                    
+                    return res.status(200).json({ 
+                        message: "Subject change removed successfully", 
+                        updatedData: userData 
+                    });
+                } else {
+                    return res.status(404).json({ message: "Subject change not found" });
+                }
                 
             } else if (action === 'createTestCredits') {
                 // Create some test past credit data for debugging

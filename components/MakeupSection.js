@@ -98,9 +98,9 @@ export default function MakeupSection({ userData, onSelectMakeup, onOpenMakeupMo
                             </div>
                             
                             <div className="flex-1">
-                                <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-start justify-between mb-2 gap-2">
                                     <h3 className={cn(
-                                        "text-lg font-bold",
+                                        "text-base sm:text-lg font-bold flex-1",
                                         hasSelectedMakeup ? "text-green-400" : "text-orange-400"
                                     )}>
                                         {hasSelectedMakeup ? "Makeup Class Scheduled" : "Makeup Required"}
@@ -111,11 +111,11 @@ export default function MakeupSection({ userData, onSelectMakeup, onOpenMakeupMo
                                         )}
                                     </h3>
                                     
-                                    <div className="flex space-x-2">
+                                    <div className="flex flex-col sm:flex-row space-y-1 sm:space-y-0 sm:space-x-2 flex-shrink-0">
                                         {!hasSelectedMakeup && (
                                             <motion.button
                                                 onClick={() => onOpenMakeupModal(makeup.subjectToMakeup, index)}
-                                                className="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/40 text-orange-300 rounded-lg font-medium transition-colors text-sm"
+                                                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/40 text-orange-300 rounded-lg font-medium transition-colors text-xs sm:text-sm whitespace-nowrap"
                                                 whileHover={{ scale: 1.05 }}
                                                 whileTap={{ scale: 0.95 }}
                                             >
@@ -127,7 +127,7 @@ export default function MakeupSection({ userData, onSelectMakeup, onOpenMakeupMo
                                             <>
                                                 <motion.button
                                                     onClick={() => onRescheduleMakeup && onRescheduleMakeup(makeup.subjectToMakeup, index)}
-                                                    className="px-3 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-300 rounded-lg font-medium transition-colors text-xs flex items-center space-x-1"
+                                                    className="px-2 sm:px-3 py-1 sm:py-1.5 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/40 text-blue-300 rounded-lg font-medium transition-colors text-xs flex items-center space-x-1 justify-center"
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.95 }}
                                                     title="Reschedule makeup class"
@@ -138,7 +138,7 @@ export default function MakeupSection({ userData, onSelectMakeup, onOpenMakeupMo
                                                 
                                                 <motion.button
                                                     onClick={() => onRemoveMakeup && onRemoveMakeup(makeup.subjectToMakeup, index)}
-                                                    className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 rounded-lg font-medium transition-colors text-xs flex items-center space-x-1"
+                                                    className="px-2 sm:px-3 py-1 sm:py-1.5 bg-red-500/20 hover:bg-red-500/30 border border-red-500/40 text-red-300 rounded-lg font-medium transition-colors text-xs flex items-center space-x-1 justify-center"
                                                     whileHover={{ scale: 1.05 }}
                                                     whileTap={{ scale: 0.95 }}
                                                     title="Remove makeup class"

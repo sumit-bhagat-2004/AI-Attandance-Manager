@@ -8,7 +8,17 @@ import MakeupAlert from './MakeupAlert';
 import { fullSchedule, bunkSchedule, mandatorySchedule, isMandatoryClass, subjects, getEffectiveCycleStartDate, getWeekInCycle, calculateTotalClassesHeld } from '../lib/scheduleData';
 import { cn, formatDate, formatDateToLocalString, isClassInPast, calculateSubjectAttendance } from '../lib/utils';
 
-export default function ScheduleView({ user, userData, updateUserData, setGeminiResult, setShowConfetti, onOpenMakeupModal }) {
+export default function ScheduleView({ 
+    user, 
+    userData, 
+    updateUserData, 
+    setGeminiResult, 
+    setShowConfetti, 
+    onOpenMakeupModal,
+    showAITopics = true,
+    showSubjectChange = true,
+    showMakeup = true
+}) {
     const [today, setToday] = useState(new Date());
     const [showMakeupModal, setShowMakeupModal] = useState(false);
     const currentUser = user; // Store current user for passing to components
@@ -28,7 +38,7 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
         const isPastDate = dateStr < todayStr;
         
         // Check if this is a makeup class that's being attended
-        const isMakeupClass = userData.makeup.needed && 
+        const isMakeupClass = showMakeup && userData.makeup.needed && 
                               userData.makeup.makeupTarget === classCode && 
                               userData.makeup.makeupDate === todayStr &&
                               status === 'attended';
@@ -141,7 +151,7 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
                     }
                     
                     // If skipping a mandatory class, show makeup modal immediately
-                    if (data.needsMakeup && !isMakeupClass) {
+                    if (showMakeup && data.needsMakeup && !isMakeupClass) {
                         toast('⚠️ Makeup class required!', {
                             duration: 4000,
                             style: {
@@ -268,6 +278,26 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
     // Handle subject change due to teacher absence
     const handleSubjectChange = async (classCode, newSubject, classDate) => {
         try {
+            // Handle refresh signal from revert holiday
+            if (newSubject === '__REFRESH__') {
+                // Just fetch the latest user data to refresh the UI
+                const response = await fetch(`/api/data?user=${currentUser}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateUserData(data);
+                    toast.success('Holiday reverted successfully', {
+                        icon: "🔄",
+                        style: {
+                            borderRadius: '10px',
+                            background: '#1f2937',
+                            color: '#f3f4f6',
+                            border: '1px solid #10b981'
+                        }
+                    });
+                }
+                return;
+            }
+
             const response = await fetch('/api/data', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -286,8 +316,13 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
             const data = await response.json();
             if (response.ok) {
                 updateUserData(data.updatedData);
-                toast.success(`Subject changed to ${subjects[newSubject]?.name}`, {
-                    icon: "📚",
+                // Handle different subject change types for toast message
+                const successMessage = newSubject === 'NO_CLASS' 
+                    ? 'Class marked as holiday' 
+                    : `Subject changed to ${subjects[newSubject]?.name}`;
+                
+                toast.success(successMessage, {
+                    icon: newSubject === 'NO_CLASS' ? "🏖️" : "📚",
                     style: {
                         borderRadius: '10px',
                         background: '#1f2937',
@@ -555,10 +590,13 @@ export default function ScheduleView({ user, userData, updateUserData, setGemini
                                         attendanceStatus={attendanceStatus}
                                         onToggleAttendance={handleToggleAttendance}
                                         weekInCycle={weekInCycle}
-                                        onGetClassTopics={handleGetClassTopics}
+                                        onGetClassTopics={showAITopics ? handleGetClassTopics : null}
                                         currentUser={currentUser}
-                                        onSubjectChange={handleSubjectChange}
+                                        onSubjectChange={showSubjectChange ? handleSubjectChange : null}
                                         userData={userData}
+                                        showAITopics={showAITopics}
+                                        showSubjectChange={showSubjectChange}
+                                        showMakeup={showMakeup}
                                     />
                                 </motion.div>
                             );

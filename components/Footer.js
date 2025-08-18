@@ -287,7 +287,7 @@ export default function Footer() {
                             <h4 className="text-white font-semibold text-lg">App Info</h4>
                             <div className="space-y-3">
                                 <div className="text-sm text-gray-400">
-                                    <p>Version 1.0.5</p>
+                                    <p>Version 1.1.0</p>
                                     <p>Built with Next.js & MongoDB</p>
                                 </div>
                                 

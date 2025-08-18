@@ -99,15 +99,28 @@ export default function CalendarView({ userData, currentUser }) {
     };
     
     const isMakeupTarget = (classCode, date) => {
-        if (!userData?.makeup?.needed || !userData?.makeup?.makeupTarget) {
-            return false;
+        // Check legacy single makeup for backward compatibility
+        if (userData?.makeup?.needed && userData?.makeup?.makeupTarget) {
+            const dateStr = formatDateToLocalString(date);
+            const makeupDate = userData.makeup.makeupDate;
+            const makeupTarget = userData.makeup.makeupTarget;
+            
+            if (dateStr === makeupDate && classCode === makeupTarget) {
+                return true;
+            }
         }
         
-        const dateStr = formatDateToLocalString(date);
-        const makeupDate = userData.makeup.makeupDate;
-        const makeupTarget = userData.makeup.makeupTarget;
+        // Check new multiple makeups array
+        if (userData?.makeups && userData.makeups.length > 0) {
+            const dateStr = formatDateToLocalString(date);
+            return userData.makeups.some(makeup => 
+                makeup.makeupDate === dateStr && 
+                makeup.makeupTarget === classCode &&
+                makeup.status !== 'completed'
+            );
+        }
         
-        return dateStr === makeupDate && classCode === makeupTarget;
+        return false;
     };
 
     const getClassStatus = (classInfo, date, dayHistory) => {

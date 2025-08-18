@@ -25,8 +25,8 @@ export default function MakeupView({ userData, subjects = {}, onMakeupSelect, on
             // Get the subject for the selected makeup index
             const selectedMakeup = makeups[selectedMakeupIndex];
             const makeupInfo = {
-                subject: selectedMakeup?.subjectToMakeup,
-                index: selectedMakeupIndex
+                subjectToMakeup: selectedMakeup?.subjectToMakeup,
+                makeupIndex: selectedMakeupIndex
             };
             
             // Pass both the targetClass and makeup info
