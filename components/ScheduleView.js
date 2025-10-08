@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarIcon, ClockIcon, BookOpenIcon } from '@heroicons/react/24/outline';
+import { CalendarIcon, ClockIcon, BookOpenIcon, Cog6ToothIcon, SunIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import ClassCard from './ClassCard';
 import MakeupModal from './MakeupModal';
 import MakeupAlert from './MakeupAlert';
+import DayManagerModal from './DayManagerModal';
 import { fullSchedule, bunkSchedule, mandatorySchedule, isMandatoryClass, subjects, getEffectiveCycleStartDate, getWeekInCycle, calculateTotalClassesHeld } from '../lib/scheduleData';
 import { cn, formatDate, formatDateToLocalString, isClassInPast, calculateSubjectAttendance } from '../lib/utils';
 
@@ -21,6 +22,7 @@ export default function ScheduleView({
 }) {
     const [today, setToday] = useState(new Date());
     const [showMakeupModal, setShowMakeupModal] = useState(false);
+    const [showDayManagerModal, setShowDayManagerModal] = useState(false);
     const currentUser = user; // Store current user for passing to components
 
     // Update today's date every second to reflect time travel changes
@@ -31,6 +33,267 @@ export default function ScheduleView({
         
         return () => clearInterval(interval);
     }, []);
+
+    // Day management functions
+    const getTodayKey = () => {
+        return formatDateToLocalString(today);
+    };
+
+    const getTodayOverrides = () => {
+        const todayKey = getTodayKey();
+        const currentDayOfWeek = today.getDay();
+        const currentDayClasses = fullSchedule[currentDayOfWeek] || [];
+        
+        // Check if all classes are marked as holiday
+        const allClassesHoliday = currentDayClasses.length > 0 && 
+            currentDayClasses.every(classInfo => {
+                const changeKey = `${todayKey}-${classInfo.code}`;
+                const change = userData?.subjectChanges?.[changeKey];
+                return change?.isHoliday === true;
+            });
+        
+        // Check if classes have been changed to form a routine override
+        let routineOverride = null;
+        if (currentDayClasses.length > 0 && !allClassesHoliday) {
+            // Try to determine which day this matches by checking the pattern of subject changes
+            const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            
+            for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+                if (dayIndex === currentDayOfWeek) continue; // Skip current day
+                
+                const targetDayClasses = fullSchedule[dayIndex] || [];
+                let matches = 0;
+                let total = Math.max(currentDayClasses.length, targetDayClasses.length);
+                
+                for (let i = 0; i < total; i++) {
+                    const currentClass = currentDayClasses[i];
+                    const targetClass = targetDayClasses[i];
+                    
+                    if (currentClass) {
+                        const changeKey = `${todayKey}-${currentClass.code}`;
+                        const change = userData?.subjectChanges?.[changeKey];
+                        
+                        if (targetClass) {
+                            // Should be changed to target class
+                            if (change?.newSubject === targetClass.code) {
+                                matches++;
+                            } else if (!change) {
+                                // No change, should match original
+                                if (currentClass.code === targetClass.code) {
+                                    matches++;
+                                }
+                            }
+                        } else {
+                            // Should be marked as no class
+                            if (change?.newSubject === 'NO_CLASS') {
+                                matches++;
+                            }
+                        }
+                    }
+                }
+                
+                // If most classes match this pattern, consider it a routine override
+                if (matches >= total * 0.8 && total > 0) {
+                    routineOverride = dayNames[dayIndex];
+                    break;
+                }
+            }
+        }
+        
+        return {
+            isHoliday: allClassesHoliday,
+            routineOverride: routineOverride
+        };
+    };
+
+    const handleMarkHoliday = async (isHoliday) => {
+        const todayKey = getTodayKey();
+        const effectiveDayOfWeek = routineOverride ? 
+            (['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(routineOverride)) : 
+            today.getDay();
+        
+        const classesToModify = fullSchedule[effectiveDayOfWeek] || [];
+        
+        try {
+            if (isHoliday) {
+                // Mark all classes on this day as holiday using existing system
+                for (const classInfo of classesToModify) {
+                    const response = await fetch('/api/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'changeSubject',
+                            payload: {
+                                user: currentUser,
+                                originalSubject: classInfo.code,
+                                newSubject: 'NO_CLASS',
+                                date: todayKey,
+                                reason: 'holiday'
+                            }
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to mark ${classInfo.code} as holiday`);
+                    }
+                }
+                toast.success('🏖️ Day marked as holiday!');
+            } else {
+                // Remove holiday status from all classes on this day
+                for (const classInfo of classesToModify) {
+                    const response = await fetch('/api/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'removeSubjectChange',
+                            payload: {
+                                user: currentUser,
+                                originalSubject: classInfo.code,
+                                date: todayKey
+                            }
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to remove holiday from ${classInfo.code}`);
+                    }
+                }
+                toast.success('📚 Holiday removed!');
+            }
+            
+            // Refresh user data to reflect changes
+            const refreshResponse = await fetch(`/api/data?user=${encodeURIComponent(currentUser)}`);
+            if (refreshResponse.ok) {
+                const refreshedData = await refreshResponse.json();
+                updateUserData(refreshedData);
+            }
+            
+        } catch (error) {
+            toast.error('Failed to update day settings');
+            console.error('Error updating day settings:', error);
+        }
+    };
+
+    const handleChangeRoutine = async (dayKey) => {
+        const todayKey = getTodayKey();
+        const currentDayOfWeek = today.getDay();
+        const currentDayClasses = fullSchedule[currentDayOfWeek] || [];
+        
+        try {
+            if (dayKey === null) {
+                // Reset to original day routine - remove all subject changes for this day
+                for (const classInfo of currentDayClasses) {
+                    const response = await fetch('/api/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'removeSubjectChange',
+                            payload: {
+                                user: currentUser,
+                                originalSubject: classInfo.code,
+                                date: todayKey
+                            }
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        console.warn(`Failed to remove subject change for ${classInfo.code}`);
+                    }
+                }
+                toast.success('📅 Day routine reset to original!');
+            } else {
+                // Change to different day's routine
+                const dayKeyToIndex = { 
+                    'sunday': 0, 'monday': 1, 'tuesday': 2, 'wednesday': 3, 
+                    'thursday': 4, 'friday': 5, 'saturday': 6 
+                };
+                const targetDayOfWeek = dayKeyToIndex[dayKey];
+                const targetDayClasses = fullSchedule[targetDayOfWeek] || [];
+                
+                // First, remove existing changes for this day
+                for (const classInfo of currentDayClasses) {
+                    await fetch('/api/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'removeSubjectChange',
+                            payload: {
+                                user: currentUser,
+                                originalSubject: classInfo.code,
+                                date: todayKey
+                            }
+                        })
+                    });
+                }
+                
+                // Apply new routine by changing each class
+                const maxClasses = Math.max(currentDayClasses.length, targetDayClasses.length);
+                
+                for (let i = 0; i < maxClasses; i++) {
+                    const currentClass = currentDayClasses[i];
+                    const targetClass = targetDayClasses[i];
+                    
+                    if (currentClass) {
+                        if (targetClass) {
+                            // Change current class to target class
+                            const response = await fetch('/api/data', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    action: 'changeSubject',
+                                    payload: {
+                                        user: currentUser,
+                                        originalSubject: currentClass.code,
+                                        newSubject: targetClass.code,
+                                        date: todayKey,
+                                        reason: `routine_change_to_${dayKey}`
+                                    }
+                                })
+                            });
+                            
+                            if (!response.ok) {
+                                console.warn(`Failed to change ${currentClass.code} to ${targetClass.code}`);
+                            }
+                        } else {
+                            // No corresponding class in target day - mark as no class
+                            const response = await fetch('/api/data', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    action: 'changeSubject',
+                                    payload: {
+                                        user: currentUser,
+                                        originalSubject: currentClass.code,
+                                        newSubject: 'NO_CLASS',
+                                        date: todayKey,
+                                        reason: `routine_change_to_${dayKey}_no_class`
+                                    }
+                                })
+                            });
+                            
+                            if (!response.ok) {
+                                console.warn(`Failed to mark ${currentClass.code} as no class`);
+                            }
+                        }
+                    }
+                }
+                
+                const dayName = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
+                toast.success(`📅 Day routine changed to ${dayName}!`);
+            }
+            
+            // Refresh user data to reflect changes
+            const refreshResponse = await fetch(`/api/data?user=${encodeURIComponent(currentUser)}`);
+            if (refreshResponse.ok) {
+                const refreshedData = await refreshResponse.json();
+                updateUserData(refreshedData);
+            }
+            
+        } catch (error) {
+            toast.error('Failed to update day routine');
+            console.error('Error updating day routine:', error);
+        }
+    };
 
     const handleToggleAttendance = async (classCode, status, classTime) => {
         const dateStr = formatDateToLocalString(today);
@@ -358,16 +621,28 @@ export default function ScheduleView({
         }
     };
     
+    // Get day overrides for today (derived from existing subject changes)
+    const todayOverrides = getTodayOverrides();
+    const isHoliday = todayOverrides.isHoliday || false;
+    const routineOverride = todayOverrides.routineOverride;
+    
+    // Use the original day's classes - subject changes will be handled by ClassCard
     const dayOfWeek = today.getDay();
-    const todaysClasses = fullSchedule[dayOfWeek] || [];
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    
+    const todaysClasses = fullSchedule[dayOfWeek] || [];
     const currentDayName = dayNames[dayOfWeek];
+    
+    // For display purposes, show what day's routine is being shown
+    const effectiveDayName = routineOverride ? 
+        dayNames[['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'].indexOf(routineOverride)] : 
+        currentDayName;
     
     // Calculate week in cycle for determining recommended bunks (using effective cycle start like StatsView)
     const effectiveCycleStart = getEffectiveCycleStartDate(userData);
     const weekInCycle = getWeekInCycle(effectiveCycleStart, today);
     
-    // Get daily bunks for recommended bunk logic (weekly + permanent)
+    // Get daily bunks for recommended bunk logic (weekly + permanent) - use original day
     const weeklyBunks = bunkSchedule[weekInCycle]?.[dayOfWeek] || [];
     const permanentBunks = bunkSchedule['permanent']?.[dayOfWeek] || [];
     const dailyBunks = [...weeklyBunks, ...permanentBunks];
@@ -508,6 +783,26 @@ export default function ScheduleView({
                                 <div className="flex items-center space-x-1">
                                     <ClockIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                                     <span>{currentDayName}, {today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                    {isHoliday && (
+                                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 bg-yellow-500/20 border border-yellow-500/40 rounded-full text-yellow-400">
+                                            <SunIcon className="w-3 h-3" />
+                                            <span className="text-xs font-medium">Holiday</span>
+                                        </span>
+                                    )}
+                                    {routineOverride && (
+                                        <span className="inline-flex items-center px-2 py-0.5 bg-purple-500/20 border border-purple-500/40 rounded-full text-purple-400 text-xs font-medium">
+                                            {effectiveDayName} Routine
+                                        </span>
+                                    )}
+                                    <motion.button
+                                        onClick={() => setShowDayManagerModal(true)}
+                                        className="ml-2 p-1 hover:bg-gray-700 rounded-md transition-colors group"
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        title="Manage day settings"
+                                    >
+                                        <Cog6ToothIcon className="w-4 h-4 text-gray-500 group-hover:text-gray-300" />
+                                    </motion.button>
                                 </div>
                                 <span className="hidden sm:inline mx-2">•</span>
                                 <span className="text-primary-400 font-medium">Week {weekInCycle}</span>
@@ -641,6 +936,17 @@ export default function ScheduleView({
                         currentUser={user}
                     />
                 )}
+
+                {/* Day Manager Modal */}
+                <DayManagerModal
+                    isOpen={showDayManagerModal}
+                    onClose={() => setShowDayManagerModal(false)}
+                    selectedDate={today}
+                    onMarkHoliday={handleMarkHoliday}
+                    onChangeRoutine={handleChangeRoutine}
+                    currentDayOverride={routineOverride}
+                    isHoliday={isHoliday}
+                />
             </AnimatePresence>
         </motion.div>
     );

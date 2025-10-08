@@ -891,6 +891,21 @@ export default async function handler(req, res) {
                     }
                 });
                 
+            } else if (action === 'updateUserData') {
+                const { userData: newUserData } = payload;
+                console.log(`Updating user data for ${user}`);
+                
+                // Update the entire user data
+                await collection.updateOne(
+                    { username: user },
+                    { $set: newUserData }
+                );
+                
+                return res.status(200).json({ 
+                    message: "User data updated successfully",
+                    updatedData: newUserData
+                });
+                
             } else {
                 return res.status(400).json({ message: "Invalid action." });
             }
